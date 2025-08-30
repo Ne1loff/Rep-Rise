@@ -7,7 +7,7 @@ import ru.chuvash.reprise.domain.services.BackupManager
 import ru.chuvash.reprise.utils.FilePickerManager
 
 fun activityModule(activity: ComponentActivity): Module = module {
-    single { FilePickerManager(activity) }
+    single(createdAtStart = true) { FilePickerManager(activity) }
 
     factory<BackupManager> {
         BackupManager(

@@ -6,11 +6,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import org.koin.android.ext.android.get
-import org.koin.core.context.loadKoinModules
 import org.koin.core.context.unloadKoinModules
+import org.koin.mp.KoinPlatformTools
 import ru.chuvash.reprise.di.activityModule
-import ru.chuvash.reprise.utils.FilePickerManager
 
 
 class MainActivity : ComponentActivity() {
@@ -21,8 +19,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
-        loadKoinModules(activityModule)
-        get<FilePickerManager>()
+        KoinPlatformTools.defaultContext()
+            .loadKoinModules(activityModule, true)
 
         setContent {
             App()

@@ -151,8 +151,8 @@ private fun CalendarView(
             items(daysInMonth) { dayOfMonth ->
                 val date = LocalDate(yearMonth.year, yearMonth.month, dayOfMonth + 1)
                 val goal = data[date]
-                val isCompleted = goal != null && goal.completedReps >= goal.targetReps
-                val hasData = goal != null && goal.completedReps > 0
+                val isCompleted = goal != null && goal.completedPoints >= goal.targetPoints
+                val hasData = goal != null && goal.completedPoints > 0
 
                 val color = when {
                     isCompleted -> MaterialTheme.colorScheme.primaryContainer
@@ -193,7 +193,7 @@ private fun ReadOnlyWorkoutSetCard(set: WorkoutSet) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text("${set.reps} ${set.exerciseType}", fontWeight = FontWeight.Bold)
+                Text("${set.reps} ${set.exercise.name}", fontWeight = FontWeight.Bold)
                 val timeString = set.dateTime.time.toString().substringBefore('.')
                 Text(timeString, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }

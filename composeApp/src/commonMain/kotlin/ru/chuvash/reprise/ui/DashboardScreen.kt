@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
@@ -30,29 +29,23 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
@@ -68,24 +61,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atTime
 import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.koinInject
 import ru.chuvash.reprise.data.PreferencesRepository
 import ru.chuvash.reprise.data.SwipeAction
 import ru.chuvash.reprise.data.model.WorkoutSet
-import ru.chuvash.reprise.domain.model.availableExercises
 import ru.chuvash.reprise.presentation.DashboardViewModel
 import ru.chuvash.reprise.ui.formatters.toLocaleMonthDay
 import kotlin.time.Clock.System
 import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,16 +88,13 @@ fun DashboardScreen(
     onNavigateToHistory: () -> Unit,
     onNavigateToAchievements: () -> Unit,
     onNavigateToStatistics: () -> Unit,
-    onNavigateToAddSet: (LocalDate) -> Unit
+    onNavigateToAddSet: (LocalDate, String?) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
 
     LaunchedEffect(initialDate) {
         viewModel.setInitialDate(initialDate)
     }
-
-    var setToManage by remember { mutableStateOf<WorkoutSet?>(null) }
-    val defaultReps = remember { prefs.defaultReps.toIntOrNull() ?: 20 }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -125,21 +113,6 @@ fun DashboardScreen(
             // Сообщаем ViewModel, что уведомление было показано
             viewModel.onAchievementNotificationShown()
         }
-    }
-
-    if (setToManage != null) {
-        AddWorkoutSetDialog(
-            set = setToManage,
-            onConfirm = { reps, exerciseType ->
-                if (setToManage!!.id.isBlank()) {
-                    viewModel.addWorkoutSet(reps, exerciseType)
-                } else {
-                    viewModel.editWorkoutSet(setToManage!!, reps, exerciseType)
-                }
-                setToManage = null
-            },
-            onDismiss = { setToManage = null }
-        )
     }
 
     Scaffold(
@@ -171,7 +144,7 @@ fun DashboardScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { onNavigateToAddSet(state.displayedDate) }) {
+            FloatingActionButton(onClick = { onNavigateToAddSet(state.displayedDate, null) }) {
                 Icon(Icons.Default.Add, "Добавить подход")
             }
         }
@@ -197,14 +170,14 @@ fun DashboardScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 state.currentGoal?.let { goal ->
-                    GoalProgress(goal.completedReps, goal.targetReps)
+                    GoalProgress(goal.completedPoints, goal.targetPoints)
                     Spacer(modifier = Modifier.height(24.dp))
                 }
                 WorkoutHistory(
                     sets = state.setsForDate,
                     swipeAction = prefs.getSwipeActionEnum(),
                     onDeleteClick = { setId -> viewModel.deleteWorkoutSet(setId) },
-                    onEditClick = { set -> setToManage = set }
+                    onEditClick = { set -> onNavigateToAddSet(state.displayedDate, set.id) }
                 )
             }
         }
@@ -244,85 +217,6 @@ private fun DateSwitcher(
             Icon(Icons.Default.ChevronRight, "Следующий день")
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AddWorkoutSetDialog(
-    set: WorkoutSet?, // null, если диалог закрыт
-    onConfirm: (reps: Int, exerciseType: String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    if (set == null) return
-
-    var repsText by remember { mutableStateOf(if (set.reps > 0) set.reps.toString() else "") }
-    val isInputValid = repsText.toIntOrNull() != null && repsText.toInt() > 0
-
-    // Состояния для выпадающего списка
-    var isDropdownExpanded by remember { mutableStateOf(false) }
-    var selectedExercise by remember { mutableStateOf(set.exerciseType.ifBlank { availableExercises.first() }) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Добавить подход") },
-        text = {
-            Column {
-                // Поле для ввода количества
-                OutlinedTextField(
-                    value = repsText,
-                    onValueChange = { repsText = it.filter { char -> char.isDigit() } },
-                    label = { Text("Количество / секунды") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
-                Spacer(Modifier.height(16.dp))
-
-                // Выпадающий список для выбора упражнения
-                ExposedDropdownMenuBox(
-                    expanded = isDropdownExpanded,
-                    onExpandedChange = { isDropdownExpanded = !isDropdownExpanded }
-                ) {
-                    OutlinedTextField(
-                        value = selectedExercise,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Упражнение") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDropdownExpanded) },
-                        modifier = Modifier.menuAnchor()
-                    )
-                    ExposedDropdownMenu(
-                        expanded = isDropdownExpanded,
-                        onDismissRequest = { isDropdownExpanded = false }
-                    ) {
-                        availableExercises.forEach { exercise ->
-                            DropdownMenuItem(
-                                text = { Text(exercise) },
-                                onClick = {
-                                    selectedExercise = exercise
-                                    isDropdownExpanded = false
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    repsText.toIntOrNull()?.let { onConfirm(it, selectedExercise) }
-                },
-                enabled = isInputValid
-            ) {
-                Text("Добавить")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Отмена")
-            }
-        }
-    )
 }
 
 @Composable
@@ -460,8 +354,8 @@ private fun WorkoutSetCard(set: WorkoutSet) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text("${set.reps} ${set.exerciseType}", fontWeight = FontWeight.Bold)
-                val timeString = set.timestamp
+                Text("${set.reps} ${set.exercise.name}", fontWeight = FontWeight.Bold)
+                val timeString = Instant.fromEpochSeconds(set.timestamp)
                     .toLocalDateTime(TimeZone.currentSystemDefault())
                     .time.toString().substringBefore('.')
                 Text(timeString, color = MaterialTheme.colorScheme.onSurfaceVariant)

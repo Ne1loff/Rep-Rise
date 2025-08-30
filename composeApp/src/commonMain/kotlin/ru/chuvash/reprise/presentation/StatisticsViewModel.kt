@@ -30,7 +30,7 @@ class StatisticsViewModel(private val repository: WorkoutRepository) : BaseViewM
 
             val weeklySummary = repository.getWeeklySummary()
             val dailySummary = repository.getDailySummaryForLast30Days()
-            val totalReps = repository.getTotalReps()
+            val totalReps = repository.getTotalEffortPoints()
             val activeDays = repository.getActiveDaysCount()
             val bestWeek = weeklySummary.maxOfOrNull { it.totalReps } ?: 0
             val average = if (activeDays > 0) totalReps / activeDays else 0

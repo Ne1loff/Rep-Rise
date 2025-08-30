@@ -2,6 +2,8 @@
 
 package ru.chuvash.reprise.data
 
+import Exercise
+import ExerciseType
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
@@ -23,22 +25,100 @@ import kotlin.time.Instant
 class WorkoutRepository(database: AppDatabase) {
     private val queries = database.workoutQueries
 
+    init {
+        initDefaultExercises();
+    }
+
     // --- Функции для работы с подходами (Sets) ---
 
-    fun addWorkoutSet(reps: Int, exerciseType: String, date: LocalDate) {
-        // 1. Получаем текущее время.
+    private fun initDefaultExercises() {
+        queries.transaction {
+            queries.upsertExercise(ExerciseType.REPS_ONLY.name, 1.0, "Отжимания")
+            queries.upsertExercise(ExerciseType.REPS_ONLY.name, 0.5, "Приседания")
+            queries.upsertExercise(ExerciseType.REPS_ONLY.name, 1.5, "Подтягивания")
+            queries.upsertExercise(ExerciseType.REPS_AND_WEIGHT.name, 0.05, "Жим лежа")
+            queries.upsertExercise(ExerciseType.TIME.name, 0.2, "Планка")
+            queries.upsertExercise(ExerciseType.TIME_AND_DISTANCE.name, 0.05, "Бег")
+        }
+    }
+
+    fun getAllExercises(): List<Exercise> {
+        return queries.getAllExercises().executeAsList().map {
+            Exercise(
+                id = it.id,
+                name = it.name,
+                type = ExerciseType.valueOf(it.type),
+                pointsCoefficient = it.pointsCoefficient
+            )
+        }
+    }
+
+    fun getSetById(id: String): WorkoutSet? {
+        return queries.getSetById(id.toLong()).executeAsOneOrNull()?.let {
+            val instant = Instant.fromEpochSeconds(it.timestamp)
+            WorkoutSet(
+                id = it.id.toString(),
+                exercise = Exercise(
+                    id = it.exerciseId,
+                    name = it.exerciseName,
+                    type = ExerciseType.valueOf(it.exerciseType),
+                    pointsCoefficient = it.pointsCoefficient
+                ),
+                timestamp = it.timestamp,
+                dateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault()),
+                reps = it.reps?.toInt(),
+                weight = it.weight,
+                durationSeconds = it.durationSeconds?.toInt(),
+                distanceMeters = it.distanceMeters?.toInt(),
+                effortPoints = it.effortPoints.toInt()
+            )
+        }
+    }
+
+    fun addSet(
+        date: LocalDate,
+        exerciseId: Long,
+        reps: Int?,
+        weight: Double?,
+        duration: Int?,
+        distance: Int?,
+        points: Int
+    ) {
         val nowTime = System.now().toLocalDateTime(TimeZone.currentSystemDefault()).time
-        // 2. Создаем LocalDateTime, комбинируя переданную ДАТУ и текущее ВРЕМЯ.
         val targetLocalDateTime = date.atTime(nowTime)
-        // 3. Конвертируем в универсальный Instant (UTC), а затем в Unix-timestamp для сохранения.
         val timestamp = targetLocalDateTime.toInstant(TimeZone.currentSystemDefault()).epochSeconds
 
         queries.insertSet(
-            reps = reps.toLong(),
+            exerciseId = exerciseId,
             timestamp = timestamp,
-            exerciseType = exerciseType
+            reps = reps?.toLong(),
+            weight = weight,
+            durationSeconds = duration?.toLong(),
+            distanceMeters = distance?.toLong(),
+            effortPoints = points.toLong()
         )
     }
+
+    fun updateSet(
+        setId: String,
+        exerciseId: Long,
+        reps: Int?,
+        weight: Double?,
+        duration: Int?,
+        distance: Int?,
+        points: Int
+    ) {
+        queries.updateSetById(
+            exerciseId = exerciseId,
+            reps = reps?.toLong(),
+            weight = weight,
+            durationSeconds = duration?.toLong(),
+            distanceMeters = distance?.toLong(),
+            effortPoints = points.toLong(),
+            id = setId.toLong()
+        )
+    }
+
 
     fun getSetsForDate(date: LocalDate): List<WorkoutSet> {
         return queries.getSetsByDate(date.toString()).executeAsList().map { entity ->
@@ -47,10 +127,19 @@ class WorkoutRepository(database: AppDatabase) {
 
             WorkoutSet(
                 id = entity.id.toString(),
-                reps = entity.reps.toInt(),
-                timestamp = timestamp,
-                exerciseType = entity.exerciseType,
-                dateTime = dateTime
+                exercise = Exercise(
+                    id = entity.exerciseId,
+                    name = entity.exerciseName,
+                    type = ExerciseType.valueOf(entity.exerciseType),
+                    pointsCoefficient = entity.pointsCoefficient
+                ),
+                timestamp = entity.timestamp,
+                dateTime = dateTime,
+                reps = entity.reps?.toInt(),
+                weight = entity.weight,
+                durationSeconds = entity.durationSeconds?.toInt(),
+                distanceMeters = entity.distanceMeters?.toInt(),
+                effortPoints = entity.effortPoints.toInt()
             )
         }
     }
@@ -62,12 +151,12 @@ class WorkoutRepository(database: AppDatabase) {
         return if (entity != null) {
             DailyGoal(
                 date = entity.date,
-                targetReps = entity.targetRps.toInt(),
-                completedReps = entity.completedReps.toInt()
+                targetPoints = entity.targetPoints.toInt(),
+                completedPoints = entity.completedPoints.toInt()
             )
         } else {
             // Если цели на сегодня нет, можно создать дефолтную
-            val newGoal = DailyGoal(date = date.toString(), targetReps = 100)
+            val newGoal = DailyGoal(date = date.toString(), targetPoints = 100)
             saveGoal(newGoal)
             newGoal
         }
@@ -76,13 +165,16 @@ class WorkoutRepository(database: AppDatabase) {
     fun saveGoal(goal: DailyGoal) {
         queries.upsertGoal(
             date = goal.date,
-            targetRps = goal.targetReps.toLong(),
-            completedReps = goal.completedReps.toLong()
+            targetPoints = goal.targetPoints.toLong(),
+            completedPoints = goal.completedPoints.toLong()
         )
     }
 
-    fun updateCompletedRepsForDate(date: LocalDate, totalReps: Int) {
-        queries.updateCompletedReps(completedReps = totalReps.toLong(), date = date.toString())
+    fun updateCompletedPointsForDate(date: LocalDate, totalPoints: Int) {
+        queries.updateCompletedPoints(
+            completedPoints = totalPoints.toLong(),
+            date = date.toString()
+        )
     }
 
     // Новая функция для получения данных за месяц
@@ -90,8 +182,8 @@ class WorkoutRepository(database: AppDatabase) {
         return queries.getGoalsForMonth(yearMonth).executeAsList().map { entity ->
             DailyGoal(
                 date = entity.date,
-                targetReps = entity.targetRps.toInt(),
-                completedReps = entity.completedReps.toInt()
+                targetPoints = entity.targetPoints.toInt(),
+                completedPoints = entity.completedPoints.toInt()
             )
         }
     }
@@ -109,7 +201,7 @@ class WorkoutRepository(database: AppDatabase) {
 
         while (true) {
             val goal = queries.getGoalByDate(currentDate.toString()).executeAsOneOrNull()
-            if (goal != null && goal.completedReps >= goal.targetRps) {
+            if (goal != null && goal.completedPoints >= goal.targetPoints) {
                 streak++
                 currentDate = currentDate.minus(1, DateTimeUnit.DAY)
             } else {
@@ -134,32 +226,32 @@ class WorkoutRepository(database: AppDatabase) {
         queries.unlockAchievement(id, System.now().epochSeconds)
     }
 
-    fun getTotalReps(): Int {
-        return queries.getTotalReps().executeAsOneOrNull()?.sum?.toInt() ?: 0
+    fun getTotalEffortPoints(): Int {
+        return queries.getTotalEffortPoints().executeAsOneOrNull()?.sum?.toInt() ?: 0
     }
 
     fun getWeeklyGoals(): Map<DayOfWeek, Int> {
         return queries.getWeeklyGoals().executeAsList().associate {
-            DayOfWeek(it.dayOfWeek.toInt()) to it.targetReps.toInt()
+            DayOfWeek(it.dayOfWeek.toInt()) to it.targetPoints.toInt()
         }
     }
 
     fun saveWeeklyGoal(day: DayOfWeek, target: Int) {
         queries.upsertWeeklyGoal(
             dayOfWeek = day.isoDayNumber.toLong(),
-            targetReps = target.toLong()
+            targetPoints = target.toLong()
         )
     }
 
     fun getWeeklySummary(): List<WeeklySummary> {
         return queries.getWeeklySummary().executeAsList().map {
-            WeeklySummary(weekId = it.weekId, totalReps = it.totalReps?.toInt() ?: 0)
+            WeeklySummary(weekId = it.weekId, totalReps = it.totalPoints?.toInt() ?: 0)
         }
     }
 
     fun getDailySummaryForLast30Days(): List<DailySummary> {
         return queries.getDailySummaryForLast30Days().executeAsList().map {
-            DailySummary(dayId = it.dayId, totalReps = it.totalReps?.toInt() ?: 0)
+            DailySummary(dayId = it.dayId, totalReps = it.totalPoints?.toInt() ?: 0)
         }
     }
 
@@ -167,8 +259,5 @@ class WorkoutRepository(database: AppDatabase) {
         return queries.getActiveDaysCount().executeAsOneOrNull()?.toInt() ?: 0
     }
 
-    fun updateWorkoutSet(id: String, reps: Int, exerciseType: String) {
-        queries.updateSetById(reps = reps.toLong(), exerciseType = exerciseType, id = id.toLong())
-    }
 }
 

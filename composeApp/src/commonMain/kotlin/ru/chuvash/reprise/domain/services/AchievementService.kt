@@ -10,7 +10,7 @@ class AchievementService(private val repository: WorkoutRepository) {
     fun checkAndUnlockAchievements(): List<Achievement> {
         val unlockedIds = repository.getUnlockedAchievementIds()
         val streak = repository.calculateCurrentStreak()
-        val totalReps = repository.getTotalReps()
+        val totalReps = repository.getTotalEffortPoints()
         val newlyUnlocked = mutableListOf<Achievement>()
 
         AchievementsList.all.forEach { achievement ->

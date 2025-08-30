@@ -1,3 +1,8 @@
+enum class DistanceUnit(val label: String) {
+    METERS("м"),
+    KILOMETERS("км")
+}
+
 enum class ExerciseType {
     REPS_ONLY,      // Только повторения (Отжимания)
     REPS_AND_WEIGHT,// Повторения и вес (Жим лежа)

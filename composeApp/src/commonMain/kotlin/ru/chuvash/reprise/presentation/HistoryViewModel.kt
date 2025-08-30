@@ -70,25 +70,4 @@ class HistoryViewModel(private val repository: WorkoutRepository) : BaseViewMode
             }
         }
     }
-
-    fun addWorkoutSet(reps: Int, exerciseType: String, date: LocalDate) {
-        viewModelScope.launch {
-            repository.addWorkoutSet(reps, exerciseType, date)
-            selectDate(date) // Обновляем данные для выбранного дня
-        }
-    }
-
-    fun editWorkoutSet(set: WorkoutSet, newReps: Int, newExerciseType: String) {
-        viewModelScope.launch {
-            repository.updateWorkoutSet(set.id, newReps, newExerciseType)
-            selectDate(set.dateTime.date) // Обновляем
-        }
-    }
-
-    fun deleteWorkoutSet(set: WorkoutSet) {
-        viewModelScope.launch {
-            repository.deleteWorkoutSetById(set.id)
-            selectDate(set.dateTime.date) // Обновляем
-        }
-    }
 }

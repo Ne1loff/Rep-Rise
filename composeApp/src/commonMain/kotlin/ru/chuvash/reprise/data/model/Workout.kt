@@ -22,7 +22,7 @@ data class WorkoutSet(
     val reps: Int?,
     val weight: Double?,
     val durationSeconds: Int?,
-    val distanceMeters: Int?, // ИСПРАВЛЕНИЕ: Новое поле для дистанции
+    val distanceMeters: Int?,
     val effortPoints: Int
 )
 

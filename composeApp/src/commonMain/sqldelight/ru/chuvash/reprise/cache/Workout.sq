@@ -1,8 +1,3 @@
--- Удаляем старые таблицы, чтобы избежать конфликтов
-DROP TABLE IF EXISTS WorkoutSetEntity;
-DROP TABLE IF EXISTS DailyGoalEntity;
-DROP TABLE IF EXISTS WeeklyGoalEntity;
-
 -- Таблица с описанием упражнений
 CREATE TABLE ExerciseEntity (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -15,11 +10,11 @@ CREATE TABLE ExerciseEntity (
 CREATE TABLE WorkoutSetEntity (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     exerciseId INTEGER NOT NULL,
-    `timestamp` INTEGER NOT NULL,
+    timestamp INTEGER NOT NULL,
     reps INTEGER,
     weight REAL,
     durationSeconds INTEGER,
-    distanceMeters INTEGER, -- ИСПРАВЛЕНИЕ: Новое поле
+    distanceMeters INTEGER,
     effortPoints INTEGER NOT NULL,
     FOREIGN KEY(exerciseId) REFERENCES ExerciseEntity(id) ON DELETE CASCADE
 );
@@ -42,30 +37,21 @@ CREATE TABLE UnlockedAchievementEntity (
     unlockedAt INTEGER NOT NULL
 );
 
--- Новые запросы
-
-getAllExercises:
-SELECT * FROM ExerciseEntity ORDER BY name;
-
-insertExercise:
-INSERT OR IGNORE INTO ExerciseEntity(name, type, pointsCoefficient) VALUES (?, ?, ?);
-
-getSetsByDate:
-SELECT wse.id, wse.timestamp, wse.reps, wse.weight, wse.durationSeconds, wse.distanceMeters, wse.effortPoints,
-ee.id AS exerciseId, ee.name AS exerciseName, ee.type AS exerciseType, ee.pointsCoefficient
-FROM WorkoutSetEntity AS wse
-JOIN ExerciseEntity AS ee ON wse.exerciseId = ee.id
-WHERE date(wse.timestamp, 'unixepoch') = :timestamp
-ORDER BY wse.timestamp ASC;
-
 ---
 --- Запросы для Упражнений (Exercises)
 ---
 getAllExercises:
 SELECT * FROM ExerciseEntity ORDER BY name;
 
-insertExercise:
-INSERT OR IGNORE INTO ExerciseEntity(name, type, pointsCoefficient) VALUES (?, ?, ?);
+upsertExercise {
+    UPDATE ExerciseEntity
+    SET type = :type,
+        pointsCoefficient = :pointsCoefficient
+    WHERE name = :name;
+
+    INSERT OR IGNORE INTO ExerciseEntity (name, type, pointsCoefficient)
+    VALUES (:name, :type, :pointsCoefficient);
+}
 
 ---
 --- Запросы для Подходов (Workout Sets)
@@ -92,6 +78,14 @@ UPDATE WorkoutSetEntity SET
     distanceMeters = ?,
     effortPoints = ?
 WHERE id = ?;
+
+getSetById:
+SELECT
+    wse.id, wse.timestamp, wse.reps, wse.weight, wse.durationSeconds, wse.distanceMeters, wse.effortPoints,
+    ee.id AS exerciseId, ee.name AS exerciseName, ee.type AS exerciseType, ee.pointsCoefficient
+FROM WorkoutSetEntity AS wse
+JOIN ExerciseEntity AS ee ON wse.exerciseId = ee.id
+WHERE wse.id = ?;
 
 deleteSetById:
 DELETE FROM WorkoutSetEntity WHERE id = ?;

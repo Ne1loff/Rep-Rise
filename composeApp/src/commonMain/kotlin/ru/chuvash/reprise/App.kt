@@ -46,15 +46,18 @@ fun App() {
                     onNavigateToStatistics = {
                         currentScreen = Screen.Statistics
                     },
-                    onNavigateToAddSet = {
-                        currentScreen = Screen.AddEditSet(date = it)
+                    onNavigateToAddSet = { date, id ->
+                        currentScreen = Screen.AddEditSet(date = date, setId = id)
                     }
                 )
             }
 
-            is Screen.AddEditSet -> AddEditSetScreen(onNavigateBack = {
-                currentScreen = Screen.Dashboard(initialDate = screen.date)
-            })
+            is Screen.AddEditSet -> AddEditSetScreen(
+                screen.date,
+                screen.setId,
+                onNavigateBack = {
+                    currentScreen = Screen.Dashboard(initialDate = screen.date)
+                })
 
             is Screen.Settings -> {
                 SettingsScreen( // Это будет наш новый экран
@@ -69,7 +72,9 @@ fun App() {
                     onNavigateBack = {
                         currentScreen = Screen.Dashboard()
                     },
-                    onDateLongPress = { date -> currentScreen = Screen.Dashboard(initialDate = date) }
+                    onDateLongPress = { date ->
+                        currentScreen = Screen.Dashboard(initialDate = date)
+                    }
                 )
             }
 

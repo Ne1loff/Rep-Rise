@@ -48,8 +48,7 @@ data class DashboardState(
 )
 
 class DashboardViewModel(
-    private val repository: WorkoutRepository,
-    private val achievementService: AchievementService
+    private val repository: WorkoutRepository
 ) : BaseViewModel() {
     private val _displayedDate =
         MutableStateFlow(Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date)
@@ -105,44 +104,26 @@ class DashboardViewModel(
 
             var goal = repository.getGoalForDate(date)
             if (goal == null) {
-                goal = DailyGoal(date = date.toString(), targetReps = targetForDate)
+                goal = DailyGoal(date = date.toString(), targetPoints = targetForDate)
                 repository.saveGoal(goal)
-            } else if (goal.targetReps != targetForDate) {
-                goal = goal.copy(targetReps = targetForDate)
+            } else if (goal.targetPoints != targetForDate) {
+                goal = goal.copy(targetPoints = targetForDate)
                 repository.saveGoal(goal)
             }
 
             val sets = repository.getSetsForDate(date)
             val streak = repository.calculateCurrentStreak()
-            val totalReps = sets.sumOf { it.reps }
+            val totalPoints = sets.sumOf { it.effortPoints }
 
-            if (goal.completedReps != totalReps) {
-                repository.updateCompletedRepsForDate(date, totalReps)
+            if (goal.completedPoints != totalPoints) {
+                repository.updateCompletedPointsForDate(date, totalPoints)
             }
-            val updatedGoal = goal.copy(completedReps = totalReps)
+            val updatedGoal = goal.copy(completedPoints = totalPoints)
 
             _currentGoal.value = updatedGoal
             _setsForDate.value = sets
             _currentStreak.value = streak
             _isLoading.value = false
-        }
-    }
-
-    fun addWorkoutSet(reps: Int, exerciseType: String) {
-        viewModelScope.launch(Dispatchers.Default) {
-            repository.addWorkoutSet(reps, exerciseType, _displayedDate.value)
-            val unlocked = achievementService.checkAndUnlockAchievements()
-            if (unlocked.isNotEmpty()) {
-                _newlyUnlockedAchievements.value = unlocked
-            }
-            loadDataForCurrentDate()
-        }
-    }
-
-    fun editWorkoutSet(set: WorkoutSet, newReps: Int, newExerciseType: String) {
-        viewModelScope.launch(Dispatchers.Default) {
-            repository.updateWorkoutSet(set.id, newReps, newExerciseType)
-            loadDataForCurrentDate()
         }
     }
 
