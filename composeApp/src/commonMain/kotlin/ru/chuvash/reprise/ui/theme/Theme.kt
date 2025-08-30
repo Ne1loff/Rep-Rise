@@ -5,6 +5,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 
 // Цветовая палитра для темной темы
@@ -45,9 +46,17 @@ fun AppTheme(
         else -> LightColorScheme
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = MaterialTheme.typography,
-        content = content
-    )
+    val customColors = if (darkTheme) {
+        CustomColors(completed = DarkGreen, inProgress = DarkYellow)
+    } else {
+        CustomColors(completed = LightGreen, inProgress = LightYellow)
+    }
+
+    CompositionLocalProvider(HistorySetsColors provides customColors) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = MaterialTheme.typography,
+            content = content
+        )
+    }
 }

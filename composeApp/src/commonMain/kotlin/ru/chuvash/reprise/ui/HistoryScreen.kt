@@ -21,7 +21,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,16 +40,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
 import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.koinInject
 import ru.chuvash.reprise.data.model.DailyGoal
 import ru.chuvash.reprise.data.model.WorkoutSet
 import ru.chuvash.reprise.presentation.HistoryViewModel
+import ru.chuvash.reprise.ui.components.WorkoutSetCard
 import ru.chuvash.reprise.ui.formatters.toLocaleMonth
+import ru.chuvash.reprise.ui.theme.HistorySetsColors
+import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -107,7 +110,7 @@ fun HistoryScreen(
                     if (displayedSets.isNotEmpty()) {
                         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             items(displayedSets) { set ->
-                                ReadOnlyWorkoutSetCard(set)
+                                WorkoutSetCard(set)
                             }
                         }
                     } else {
@@ -145,19 +148,25 @@ private fun CalendarView(
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            // Пустые ячейки до начала месяца
             items(firstDayOfWeek - 1) { Box {} }
 
             items(daysInMonth) { dayOfMonth ->
                 val date = LocalDate(yearMonth.year, yearMonth.month, dayOfMonth + 1)
+                val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
                 val goal = data[date]
                 val isCompleted = goal != null && goal.completedPoints >= goal.targetPoints
-                val hasData = goal != null && goal.completedPoints > 0
+                val hasProgress = goal != null && goal.completedPoints > 0
+                val isToday = date == today
 
                 val color = when {
-                    isCompleted -> MaterialTheme.colorScheme.primaryContainer
-                    hasData -> MaterialTheme.colorScheme.secondaryContainer
+                    isCompleted -> HistorySetsColors.current.completed
+                    hasProgress -> HistorySetsColors.current.inProgress
                     else -> MaterialTheme.colorScheme.surfaceVariant
+                }
+                val borderColor = when {
+                    date == selectedDate -> MaterialTheme.colorScheme.primary
+                    isToday -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    else -> Color.Transparent
                 }
 
                 Box(
@@ -165,12 +174,12 @@ private fun CalendarView(
                         .aspectRatio(1f)
                         .clip(MaterialTheme.shapes.small)
                         .background(color)
-                        .border( // <-- Обводка для выделения
-                            width = 2.dp,
-                            color = if (date == selectedDate) MaterialTheme.colorScheme.primary else Color.Transparent,
+                        .border(
+                            width = 1.dp,
+                            color = borderColor,
                             shape = MaterialTheme.shapes.small
                         )
-                        .pointerInput(Unit) {
+                        .pointerInput(date) {
                             detectTapGestures(
                                 onTap = { onDateSelected(date) },
                                 onLongPress = { onDateLongPress(date) }
@@ -180,22 +189,6 @@ private fun CalendarView(
                 ) {
                     Text((dayOfMonth + 1).toString())
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ReadOnlyWorkoutSetCard(set: WorkoutSet) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text("${set.reps} ${set.exercise.name}", fontWeight = FontWeight.Bold)
-                val timeString = set.dateTime.time.toString().substringBefore('.')
-                Text(timeString, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

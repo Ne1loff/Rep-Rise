@@ -29,7 +29,6 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -73,10 +72,10 @@ import ru.chuvash.reprise.data.PreferencesRepository
 import ru.chuvash.reprise.data.SwipeAction
 import ru.chuvash.reprise.data.model.WorkoutSet
 import ru.chuvash.reprise.presentation.DashboardViewModel
+import ru.chuvash.reprise.ui.components.WorkoutSetCard
 import ru.chuvash.reprise.ui.formatters.toLocaleMonthDay
 import kotlin.time.Clock.System
 import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -340,25 +339,6 @@ private fun WorkoutHistory(
                         }
                     }
                 }
-            }
-        }
-    }
-}
-
-// Карточку вынесли в отдельный Composable для чистоты
-@Composable
-private fun WorkoutSetCard(set: WorkoutSet) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text("${set.reps} ${set.exercise.name}", fontWeight = FontWeight.Bold)
-                val timeString = Instant.fromEpochSeconds(set.timestamp)
-                    .toLocalDateTime(TimeZone.currentSystemDefault())
-                    .time.toString().substringBefore('.')
-                Text(timeString, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

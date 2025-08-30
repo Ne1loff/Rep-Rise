@@ -38,7 +38,7 @@ class WorkoutRepository(database: AppDatabase) {
             queries.upsertExercise(ExerciseType.REPS_ONLY.name, 1.5, "Подтягивания")
             queries.upsertExercise(ExerciseType.REPS_AND_WEIGHT.name, 0.05, "Жим лежа")
             queries.upsertExercise(ExerciseType.TIME.name, 0.2, "Планка")
-            queries.upsertExercise(ExerciseType.TIME_AND_DISTANCE.name, 0.05, "Бег")
+            queries.upsertExercise(ExerciseType.TIME_AND_DISTANCE.name, 0.00005, "Бег") // TODO: Поправить
         }
     }
 
