@@ -1,0 +1,168 @@
+-- Удаляем старые таблицы, чтобы избежать конфликтов
+DROP TABLE IF EXISTS WorkoutSetEntity;
+DROP TABLE IF EXISTS DailyGoalEntity;
+DROP TABLE IF EXISTS WeeklyGoalEntity;
+
+-- Таблица с описанием упражнений
+CREATE TABLE ExerciseEntity (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    type TEXT NOT NULL,
+    pointsCoefficient REAL NOT NULL
+);
+
+-- Расширенная таблица подходов
+CREATE TABLE WorkoutSetEntity (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    exerciseId INTEGER NOT NULL,
+    `timestamp` INTEGER NOT NULL,
+    reps INTEGER,
+    weight REAL,
+    durationSeconds INTEGER,
+    distanceMeters INTEGER, -- ИСПРАВЛЕНИЕ: Новое поле
+    effortPoints INTEGER NOT NULL,
+    FOREIGN KEY(exerciseId) REFERENCES ExerciseEntity(id) ON DELETE CASCADE
+);
+
+-- Таблица целей, теперь в очках
+CREATE TABLE DailyGoalEntity (
+    date TEXT NOT NULL PRIMARY KEY,
+    targetPoints INTEGER NOT NULL,
+    completedPoints INTEGER NOT NULL DEFAULT 0
+);
+
+-- Таблица недельного плана, теперь в очках
+CREATE TABLE WeeklyGoalEntity (
+    dayOfWeek INTEGER NOT NULL PRIMARY KEY,
+    targetPoints INTEGER NOT NULL
+);
+
+CREATE TABLE UnlockedAchievementEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    unlockedAt INTEGER NOT NULL
+);
+
+-- Новые запросы
+
+getAllExercises:
+SELECT * FROM ExerciseEntity ORDER BY name;
+
+insertExercise:
+INSERT OR IGNORE INTO ExerciseEntity(name, type, pointsCoefficient) VALUES (?, ?, ?);
+
+getSetsByDate:
+SELECT wse.id, wse.timestamp, wse.reps, wse.weight, wse.durationSeconds, wse.distanceMeters, wse.effortPoints,
+ee.id AS exerciseId, ee.name AS exerciseName, ee.type AS exerciseType, ee.pointsCoefficient
+FROM WorkoutSetEntity AS wse
+JOIN ExerciseEntity AS ee ON wse.exerciseId = ee.id
+WHERE date(wse.timestamp, 'unixepoch') = :timestamp
+ORDER BY wse.timestamp ASC;
+
+---
+--- Запросы для Упражнений (Exercises)
+---
+getAllExercises:
+SELECT * FROM ExerciseEntity ORDER BY name;
+
+insertExercise:
+INSERT OR IGNORE INTO ExerciseEntity(name, type, pointsCoefficient) VALUES (?, ?, ?);
+
+---
+--- Запросы для Подходов (Workout Sets)
+---
+getSetsByDate:
+SELECT
+    w.id, w.timestamp, w.reps, w.weight, w.durationSeconds, w.distanceMeters, w.effortPoints,
+    e.id AS exerciseId, e.name AS exerciseName, e.type AS exerciseType, e.pointsCoefficient
+FROM WorkoutSetEntity AS w
+JOIN ExerciseEntity AS e ON w.exerciseId = e.id
+WHERE date(w.timestamp, 'unixepoch') = ?
+ORDER BY w.timestamp ASC;
+
+insertSet:
+INSERT INTO WorkoutSetEntity(exerciseId, timestamp, reps, weight, durationSeconds, distanceMeters, effortPoints)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+updateSetById:
+UPDATE WorkoutSetEntity SET
+    exerciseId = ?,
+    reps = ?,
+    weight = ?,
+    durationSeconds = ?,
+    distanceMeters = ?,
+    effortPoints = ?
+WHERE id = ?;
+
+deleteSetById:
+DELETE FROM WorkoutSetEntity WHERE id = ?;
+
+getTotalEffortPoints:
+SELECT sum(effortPoints) FROM WorkoutSetEntity;
+
+getWeeklySummary:
+SELECT
+    strftime('%Y-%W', timestamp, 'unixepoch', 'weekday 0', '-6 days') AS weekId,
+    sum(effortPoints) AS totalPoints
+FROM WorkoutSetEntity
+GROUP BY weekId
+ORDER BY weekId DESC
+LIMIT 8;
+
+getDailySummaryForLast30Days:
+SELECT
+    date(timestamp, 'unixepoch') AS dayId,
+    sum(effortPoints) AS totalPoints
+FROM WorkoutSetEntity
+WHERE timestamp >= strftime('%s', 'now', '-30 days')
+GROUP BY dayId
+ORDER BY dayId DESC;
+
+getActiveDaysCount:
+SELECT count(DISTINCT date(timestamp, 'unixepoch')) FROM WorkoutSetEntity;
+
+
+---
+--- Запросы для Дневных Целей (Daily Goals)
+---
+getGoalByDate:
+SELECT * FROM DailyGoalEntity WHERE date = ?;
+
+upsertGoal {
+    UPDATE DailyGoalEntity
+    SET targetPoints = :targetPoints,
+        completedPoints = :completedPoints
+    WHERE date = :date;
+
+    INSERT OR IGNORE INTO DailyGoalEntity (date, targetPoints, completedPoints)
+    VALUES (:date, :targetPoints, :completedPoints);
+}
+
+updateCompletedPoints:
+UPDATE DailyGoalEntity SET completedPoints = ? WHERE date = ?;
+
+getGoalsForMonth:
+SELECT * FROM DailyGoalEntity WHERE strftime('%Y-%m', date) = ?;
+
+---
+--- Запросы для Недельных Целей (Weekly Goals)
+---
+getWeeklyGoals:
+SELECT * FROM WeeklyGoalEntity;
+
+upsertWeeklyGoal {
+    UPDATE WeeklyGoalEntity
+    SET targetPoints = :targetPoints
+    WHERE dayOfWeek = :dayOfWeek;
+
+    INSERT OR IGNORE INTO WeeklyGoalEntity (dayOfWeek, targetPoints)
+    VALUES (:dayOfWeek, :targetPoints);
+}
+
+---
+--- Запросы для Достижений (Achievements)
+---
+getUnlockedAchievementIds:
+SELECT id FROM UnlockedAchievementEntity;
+
+unlockAchievement:
+INSERT OR IGNORE INTO UnlockedAchievementEntity(id, unlockedAt) VALUES (?, ?);
