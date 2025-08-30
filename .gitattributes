@@ -1,0 +1,84 @@
+# ==========================================================================================
+# .gitattributes for Kotlin / Compose Multiplatform Projects
+# ==========================================================================================
+#
+# Этот файл помогает Git правильно обрабатывать разные типы файлов в репозитории.
+# Основная цель - нормализовать окончания строк (LF vs CRLF) и правильно
+# работать с бинарными файлами и скриптами.
+
+# -------------------------------------------
+# Глобальные настройки
+# -------------------------------------------
+# Автоматически определять, является ли файл текстовым, и обрабатывать окончания строк.
+# В репозитории все будет храниться с LF (Unix), а на Windows автоматически
+# конвертироваться в CRLF при клонировании.
+* text=auto eol=lf
+
+# -------------------------------------------
+# Исходный код и текстовые файлы
+# -------------------------------------------
+# Явно указываем, что все эти файлы являются текстовыми и должны использовать LF.
+*.kt              text eol=lf
+*.kts             text eol=lf
+*.java            text eol=lf
+*.scala           text eol=lf
+*.sql             text eol=lf
+*.sq              text eol=lf
+*.xml             text eol=lf
+*.json            text eol=lf
+*.yml             text eol=lf
+*.yaml            text eol=lf
+*.properties      text eol=lf
+*.pro             text eol=lf
+*.conf            text eol=lf
+*.gradle          text eol=lf
+*.md              text eol=lf
+*.txt             text eol=lf
+
+# -------------------------------------------
+# Файлы проекта и Git
+# -------------------------------------------
+.gitignore        text eol=lf
+.gitattributes    text eol=lf
+.editorconfig     text eol=lf
+gradlew           text eol=lf executable
+gradlew.bat       text eol=crlf
+
+# -------------------------------------------
+# Бинарные файлы
+# -------------------------------------------
+# Указываем Git, что эти файлы являются бинарными.
+# Это отключает для них вычисление текстовых diff'ов.
+*.png             binary
+*.jpg             binary
+*.jpeg            binary
+*.gif             binary
+*.svg             binary
+*.ico             binary
+*.webp            binary
+*.bmp             binary
+
+*.jar             binary
+*.keystore        binary
+*.jks             binary
+*.p12             binary
+*.cer             binary
+
+*.zip             binary
+*.gz              binary
+*.tar             binary
+
+*.so              binary
+*.a               binary
+*.dylib           binary
+*.dll             binary
+
+# -------------------------------------------
+# Шрифты
+# -------------------------------------------
+*.ttf             binary
+*.otf             binary
+*.woff            binary
+*.woff2           binary
+
+# ==========================================================================================
