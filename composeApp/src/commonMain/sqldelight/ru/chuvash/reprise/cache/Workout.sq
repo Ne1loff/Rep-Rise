@@ -1,7 +1,7 @@
 -- Таблица с описанием упражнений
 CREATE TABLE ExerciseEntity (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
+    nameKey TEXT NOT NULL UNIQUE,
     type TEXT NOT NULL,
     pointsCoefficient REAL NOT NULL
 );
@@ -41,15 +41,15 @@ CREATE TABLE UnlockedAchievementEntity (
 --- Запросы для Упражнений (Exercises)
 ---
 getAllExercises:
-SELECT * FROM ExerciseEntity ORDER BY name;
+SELECT * FROM ExerciseEntity ORDER BY nameKey;
 
 upsertExercise {
     UPDATE ExerciseEntity
     SET type = :type,
         pointsCoefficient = :pointsCoefficient
-    WHERE name = :name;
+    WHERE nameKey = :name;
 
-    INSERT OR IGNORE INTO ExerciseEntity (name, type, pointsCoefficient)
+    INSERT OR IGNORE INTO ExerciseEntity (nameKey, type, pointsCoefficient)
     VALUES (:name, :type, :pointsCoefficient);
 }
 
@@ -59,7 +59,7 @@ upsertExercise {
 getSetsByDate:
 SELECT
     w.id, w.timestamp, w.reps, w.weight, w.durationSeconds, w.distanceMeters, w.effortPoints,
-    e.id AS exerciseId, e.name AS exerciseName, e.type AS exerciseType, e.pointsCoefficient
+    e.id AS exerciseId, e.nameKey AS exerciseName, e.type AS exerciseType, e.pointsCoefficient
 FROM WorkoutSetEntity AS w
 JOIN ExerciseEntity AS e ON w.exerciseId = e.id
 WHERE date(w.timestamp, 'unixepoch') = ?
@@ -82,7 +82,7 @@ WHERE id = ?;
 getSetById:
 SELECT
     wse.id, wse.timestamp, wse.reps, wse.weight, wse.durationSeconds, wse.distanceMeters, wse.effortPoints,
-    ee.id AS exerciseId, ee.name AS exerciseName, ee.type AS exerciseType, ee.pointsCoefficient
+    ee.id AS exerciseId, ee.nameKey AS exerciseName, ee.type AS exerciseType, ee.pointsCoefficient
 FROM WorkoutSetEntity AS wse
 JOIN ExerciseEntity AS ee ON wse.exerciseId = ee.id
 WHERE wse.id = ?;
@@ -160,3 +160,19 @@ SELECT id FROM UnlockedAchievementEntity;
 
 unlockAchievement:
 INSERT OR IGNORE INTO UnlockedAchievementEntity(id, unlockedAt) VALUES (?, ?);
+
+-- Для "Ранней пташки" / "Ночной совы"
+getSetCountByHour:
+SELECT count(*) FROM WorkoutSetEntity WHERE CAST(strftime('%H', `timestamp`, 'unixepoch', 'localtime') AS INTEGER) >= ? AND CAST(strftime('%H', `timestamp`, 'unixepoch', 'localtime') AS INTEGER) < ?;
+
+-- Для "Воина выходного дня"
+getWorkoutCountOnDate:
+SELECT count(*) FROM WorkoutSetEntity WHERE date(`timestamp`, 'unixepoch') = ?;
+
+-- Для "Марафонца"
+getTotalDistanceForExercise:
+SELECT sum(distanceMeters) FROM WorkoutSetEntity JOIN ExerciseEntity ON WorkoutSetEntity.exerciseId = ExerciseEntity.id WHERE ExerciseEntity.nameKey = ?;
+
+-- Для "Повелителя железа"
+getTotalWeightLifted:
+SELECT sum(reps * weight) FROM WorkoutSetEntity WHERE reps IS NOT NULL AND weight IS NOT NULL;

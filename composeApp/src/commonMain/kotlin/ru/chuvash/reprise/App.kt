@@ -1,11 +1,14 @@
 package ru.chuvash.reprise
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import kotlinx.datetime.LocalDate
+import org.koin.compose.koinInject
+import ru.chuvash.reprise.domain.services.AchievementService
 import ru.chuvash.reprise.ui.AchievementsScreen
 import ru.chuvash.reprise.ui.AddEditSetScreen
 import ru.chuvash.reprise.ui.DashboardScreen
@@ -27,6 +30,20 @@ sealed class Screen {
 fun App() {
     AppTheme {
         var currentScreen by remember { mutableStateOf<Screen>(Screen.Dashboard()) }
+        val achievementService: AchievementService = koinInject()
+
+        LaunchedEffect(currentScreen) {
+            val screenName = when (currentScreen) {
+                is Screen.History -> "History"
+                is Screen.Statistics -> "Statistics"
+                is Screen.Achievements -> "Achievements"
+                is Screen.Settings -> "Settings"
+                else -> null // Для Dashboard и AddEditSet нам это не нужно
+            }
+            if (screenName != null) {
+                achievementService.notifyScreenVisited(screenName)
+            }
+        }
 
         // 3. Используем when для выбора, что показать
         when (val screen = currentScreen) {

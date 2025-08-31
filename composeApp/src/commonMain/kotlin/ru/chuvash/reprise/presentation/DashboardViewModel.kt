@@ -121,7 +121,7 @@ class DashboardViewModel(
             }
             val updatedGoal = goal.copy(completedPoints = totalPoints)
 
-            val unlocked = achievementService.checkAndUnlockAchievements()
+            val unlocked = achievementService.checkAndUnlockAchievements(date)
             if (unlocked.isNotEmpty()) {
                 _newlyUnlockedAchievements.value = unlocked
             }

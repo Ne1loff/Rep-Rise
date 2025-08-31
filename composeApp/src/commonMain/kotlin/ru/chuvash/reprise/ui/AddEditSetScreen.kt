@@ -20,17 +20,14 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -45,7 +42,21 @@ import androidx.compose.ui.unit.dp
 import kotlinx.datetime.LocalDate
 import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
+import reprise.composeapp.generated.resources.Res
+import reprise.composeapp.generated.resources.addedit_add_set
+import reprise.composeapp.generated.resources.addedit_distance
+import reprise.composeapp.generated.resources.addedit_edit_set
+import reprise.composeapp.generated.resources.addedit_hours
+import reprise.composeapp.generated.resources.addedit_minutes
+import reprise.composeapp.generated.resources.addedit_reps
+import reprise.composeapp.generated.resources.addedit_seconds
+import reprise.composeapp.generated.resources.addedit_select_exercise
+import reprise.composeapp.generated.resources.addedit_weight_kg
+import reprise.composeapp.generated.resources.common_exercise
+import reprise.composeapp.generated.resources.common_save
+import reprise.composeapp.generated.resources.navigation_back
 import ru.chuvash.reprise.presentation.AddEditSetViewModel
+import org.jetbrains.compose.resources.stringResource as res
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,10 +77,10 @@ fun AddEditSetScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (state.isEditMode) "Изменить подход" else "Новый подход") },
+                title = { Text(res(if (state.isEditMode) Res.string.addedit_edit_set else Res.string.addedit_add_set)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Назад")
+                        Icon(Icons.Default.ArrowBack, res(Res.string.navigation_back))
                     }
                 },
                 actions = {
@@ -78,7 +89,7 @@ fun AddEditSetScreen(
                         onClick = { viewModel.saveSet() },
                         enabled = state.isSaveEnabled
                     ) {
-                        Icon(Icons.Default.Check, "Сохранить")
+                        Icon(Icons.Default.Check, res(Res.string.common_save))
                     }
                 }
             )
@@ -99,11 +110,16 @@ fun AddEditSetScreen(
                     onSelected = { viewModel.onExerciseSelected(it) }
                 )
 
-                AnimatedVisibility(visible = state.selectedExercise?.type in listOf(ExerciseType.REPS_ONLY, ExerciseType.REPS_AND_WEIGHT)) {
+                AnimatedVisibility(
+                    visible = state.selectedExercise?.type in listOf(
+                        ExerciseType.REPS_ONLY,
+                        ExerciseType.REPS_AND_WEIGHT
+                    )
+                ) {
                     OutlinedTextField(
                         value = state.reps,
                         onValueChange = { viewModel.onRepsChanged(it) },
-                        label = { Text("Повторения") },
+                        label = { Text(res(Res.string.addedit_reps)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -112,31 +128,36 @@ fun AddEditSetScreen(
                     OutlinedTextField(
                         value = state.weight,
                         onValueChange = { viewModel.onWeightChanged(it) },
-                        label = { Text("Вес (кг)") },
+                        label = { Text(res(Res.string.addedit_weight_kg)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
-                AnimatedVisibility(visible = state.selectedExercise?.type in listOf(ExerciseType.TIME, ExerciseType.TIME_AND_DISTANCE)) {
+                AnimatedVisibility(
+                    visible = state.selectedExercise?.type in listOf(
+                        ExerciseType.TIME,
+                        ExerciseType.TIME_AND_DISTANCE
+                    )
+                ) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(
                             value = state.durationHours,
                             onValueChange = { viewModel.onDurationHoursChanged(it) },
-                            label = { Text("Часы") },
+                            label = { Text(res(Res.string.addedit_hours)) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.weight(1f)
                         )
                         OutlinedTextField(
                             value = state.durationMinutes,
                             onValueChange = { viewModel.onDurationMinutesChanged(it) },
-                            label = { Text("Мин") },
+                            label = { Text(res(Res.string.addedit_minutes)) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.weight(1f)
                         )
                         OutlinedTextField(
                             value = state.durationSeconds,
                             onValueChange = { viewModel.onDurationSecondsChanged(it) },
-                            label = { Text("Сек") },
+                            label = { Text(res(Res.string.addedit_seconds)) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.weight(1f)
                         )
@@ -146,7 +167,7 @@ fun AddEditSetScreen(
                     OutlinedTextField(
                         value = state.distance,
                         onValueChange = { viewModel.onDistanceChanged(it) },
-                        label = { Text("Дистанция") },
+                        label = { Text(res(Res.string.addedit_distance)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.fillMaxWidth(),
                         trailingIcon = {
@@ -154,7 +175,7 @@ fun AddEditSetScreen(
                                 onClick = { viewModel.onDistanceUnitChanged() },
                                 contentPadding = PaddingValues(horizontal = 4.dp)
                             ) {
-                                Text(state.distanceUnit.label)
+                                Text(res(state.distanceUnit.label))
                             }
                         }
                     )
@@ -178,12 +199,13 @@ private fun ExerciseSelector(
         onExpandedChange = { isDropdownExpanded = !isDropdownExpanded }
     ) {
         OutlinedTextField(
-            value = selected?.name ?: "Выберите упражнение",
+            value = selected?.let { res(it.nameKey.resource) }
+                ?: res(Res.string.addedit_select_exercise),
             onValueChange = {},
             readOnly = true,
-            label = { Text("Упражнение") },
+            label = { Text(res(Res.string.common_exercise)) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDropdownExpanded) },
-            modifier = Modifier.menuAnchor().fillMaxWidth()
+            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth()
         )
         ExposedDropdownMenu(
             expanded = isDropdownExpanded,
@@ -191,7 +213,7 @@ private fun ExerciseSelector(
         ) {
             exercises.forEach { exercise ->
                 DropdownMenuItem(
-                    text = { Text(exercise.name) },
+                    text = { Text(res(exercise.nameKey.resource)) },
                     onClick = {
                         onSelected(exercise)
                         isDropdownExpanded = false

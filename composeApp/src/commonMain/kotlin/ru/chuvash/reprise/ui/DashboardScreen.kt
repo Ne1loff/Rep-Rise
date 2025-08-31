@@ -67,7 +67,26 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.pluralStringResource
 import org.koin.compose.koinInject
+import reprise.composeapp.generated.resources.Res
+import reprise.composeapp.generated.resources.achieve_received
+import reprise.composeapp.generated.resources.common_today
+import reprise.composeapp.generated.resources.common_yesterday
+import reprise.composeapp.generated.resources.dashboard_add_set
+import reprise.composeapp.generated.resources.dashboard_delete
+import reprise.composeapp.generated.resources.dashboard_edit
+import reprise.composeapp.generated.resources.dashboard_goal_progress
+import reprise.composeapp.generated.resources.dashboard_next_day
+import reprise.composeapp.generated.resources.dashboard_previous_day
+import reprise.composeapp.generated.resources.dashboard_streak
+import reprise.composeapp.generated.resources.dashboard_streak_days
+import reprise.composeapp.generated.resources.dashboard_todays_sets
+import reprise.composeapp.generated.resources.screen_achievements
+import reprise.composeapp.generated.resources.screen_history
+import reprise.composeapp.generated.resources.screen_settings
+import reprise.composeapp.generated.resources.screen_statistics
 import ru.chuvash.reprise.data.PreferencesRepository
 import ru.chuvash.reprise.data.SwipeAction
 import ru.chuvash.reprise.data.model.WorkoutSet
@@ -76,6 +95,7 @@ import ru.chuvash.reprise.ui.components.WorkoutSetCard
 import ru.chuvash.reprise.ui.formatters.toLocaleMonthDay
 import kotlin.time.Clock.System
 import kotlin.time.ExperimentalTime
+import org.jetbrains.compose.resources.stringResource as res
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -105,7 +125,7 @@ fun DashboardScreen(
             val achievement = newlyUnlocked.first()
             scope.launch {
                 snackbarHostState.showSnackbar(
-                    message = "Достижение получено: \"${achievement.title}\"",
+                    message = getString(Res.string.achieve_received, getString(achievement.title)),
                     withDismissAction = true
                 )
             }
@@ -121,22 +141,22 @@ fun DashboardScreen(
                 title = { Text("Rep:Rise") },
                 actions = {
                     IconButton(onClick = onNavigateToStatistics) { // <-- Кнопка
-                        Icon(Icons.Default.BarChart, "Статистика")
+                        Icon(Icons.Default.BarChart, res(Res.string.screen_statistics))
                     }
                     IconButton(onClick = onNavigateToAchievements) { // <-- Кнопка
-                        Icon(Icons.Default.EmojiEvents, "Достижения")
+                        Icon(Icons.Default.EmojiEvents, res(Res.string.screen_achievements))
                     }
                     IconButton(onClick = onNavigateToHistory) {
                         Icon(
                             imageVector = Icons.Default.DateRange,
-                            contentDescription = "История"
+                            contentDescription = res(Res.string.screen_history)
                         )
                     }
                     // Кнопка для перехода в настройки
                     IconButton(onClick = onNavigateToSettings) {
                         Icon(
                             imageVector = Icons.Default.Settings,
-                            contentDescription = "Настройки"
+                            contentDescription = res(Res.string.screen_settings)
                         )
                     }
                 }
@@ -144,7 +164,7 @@ fun DashboardScreen(
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { onNavigateToAddSet(state.displayedDate, null) }) {
-                Icon(Icons.Default.Add, "Добавить подход")
+                Icon(Icons.Default.Add, res(Res.string.dashboard_add_set))
             }
         }
     ) { paddingValues ->
@@ -191,8 +211,8 @@ private fun DateSwitcher(
 ) {
     val today = System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     val dateText = when (date) {
-        today -> "Сегодня"
-        today.minus(1, DateTimeUnit.DAY) -> "Вчера"
+        today -> res(Res.string.common_today)
+        today.minus(1, DateTimeUnit.DAY) -> res(Res.string.common_yesterday)
         else -> {
             val formattedDate = date.toLocaleMonthDay()
             if (date.year != today.year) {
@@ -209,11 +229,11 @@ private fun DateSwitcher(
         horizontalArrangement = Arrangement.Center
     ) {
         IconButton(onClick = onPreviousDay) {
-            Icon(Icons.Default.ChevronLeft, "Предыдущий день")
+            Icon(Icons.Default.ChevronLeft, res(Res.string.dashboard_previous_day))
         }
         Text(dateText, style = MaterialTheme.typography.titleLarge)
         IconButton(onClick = onNextDay, enabled = date < today) {
-            Icon(Icons.Default.ChevronRight, "Следующий день")
+            Icon(Icons.Default.ChevronRight, res(Res.string.dashboard_next_day))
         }
     }
 }
@@ -223,7 +243,7 @@ fun GoalProgress(completed: Int, target: Int) {
     val progress = if (target > 0) completed.toFloat() / target.toFloat() else 0f
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("Цель на сегодня", style = MaterialTheme.typography.titleMedium)
+        Text(res(Res.string.dashboard_goal_progress), style = MaterialTheme.typography.titleMedium)
         Text(
             "$completed / $target",
             style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold)
@@ -247,7 +267,7 @@ private fun WorkoutHistory(
     onEditClick: (WorkoutSet) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        Text("Сегодняшние подходы", style = MaterialTheme.typography.titleLarge)
+        Text(res(Res.string.dashboard_todays_sets), style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(8.dp))
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -320,7 +340,7 @@ private fun WorkoutHistory(
                                 onDismissRequest = { showMenu = false }
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("Изменить") },
+                                    text = { Text(res(Res.string.dashboard_edit)) },
                                     onClick = {
                                         onEditClick(set)
                                         showMenu = false
@@ -328,7 +348,7 @@ private fun WorkoutHistory(
                                     leadingIcon = { Icon(Icons.Default.Edit, null) }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Удалить") },
+                                    text = { Text(res(Res.string.dashboard_delete)) },
                                     onClick = {
                                         isDismissed = true // Запускаем анимацию и удаление
                                         showMenu = false
@@ -344,7 +364,6 @@ private fun WorkoutHistory(
     }
 }
 
-// Новый Composable для отображения стрика
 @Composable
 private fun StreakIndicator(streak: Int) {
     if (streak > 0) {
@@ -354,11 +373,11 @@ private fun StreakIndicator(streak: Int) {
         ) {
             Icon(
                 imageVector = Icons.Default.LocalFireDepartment,
-                contentDescription = "Streak",
+                contentDescription = res(Res.string.dashboard_streak),
                 tint = MaterialTheme.colorScheme.tertiary
             )
             Text(
-                text = "$streak ${getStreakDayString(streak)}",
+                text = getStreakDayString(streak),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -366,11 +385,7 @@ private fun StreakIndicator(streak: Int) {
     }
 }
 
-// Вспомогательная функция для правильного склонения слова "день"
+@Composable
 private fun getStreakDayString(days: Int): String {
-    return when {
-        days % 10 == 1 && days % 100 != 11 -> "день"
-        days % 10 in 2..4 && days % 100 !in 12..14 -> "дня"
-        else -> "дней"
-    }
+    return pluralStringResource(Res.plurals.dashboard_streak_days, quantity = days, days)
 }

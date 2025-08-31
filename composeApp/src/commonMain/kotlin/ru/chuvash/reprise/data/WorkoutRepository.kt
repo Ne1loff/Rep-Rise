@@ -3,6 +3,7 @@
 package ru.chuvash.reprise.data
 
 import Exercise
+import ExerciseNameKey
 import ExerciseType
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
@@ -26,19 +27,19 @@ class WorkoutRepository(database: AppDatabase) {
     private val queries = database.workoutQueries
 
     init {
-        initDefaultExercises();
+        initDefaultExercises()
     }
 
     // --- Функции для работы с подходами (Sets) ---
 
     private fun initDefaultExercises() {
         queries.transaction {
-            queries.upsertExercise(ExerciseType.REPS_ONLY.name, 1.0, "Отжимания")
-            queries.upsertExercise(ExerciseType.REPS_ONLY.name, 0.5, "Приседания")
-            queries.upsertExercise(ExerciseType.REPS_ONLY.name, 1.5, "Подтягивания")
-            queries.upsertExercise(ExerciseType.REPS_AND_WEIGHT.name, 0.05, "Жим лежа")
-            queries.upsertExercise(ExerciseType.TIME.name, 0.2, "Планка")
-            queries.upsertExercise(ExerciseType.TIME_AND_DISTANCE.name, 0.00005, "Бег") // TODO: Поправить
+            queries.upsertExercise(ExerciseType.REPS_ONLY.name, 1.0, "pushups")
+            queries.upsertExercise(ExerciseType.REPS_ONLY.name, 0.5, "squats")
+            queries.upsertExercise(ExerciseType.REPS_ONLY.name, 1.5, "pullups")
+            queries.upsertExercise(ExerciseType.REPS_AND_WEIGHT.name, 0.05, "bench_press")
+            queries.upsertExercise(ExerciseType.TIME.name, 0.2, "plank")
+            queries.upsertExercise(ExerciseType.TIME_AND_DISTANCE.name, 0.00005, "running")
         }
     }
 
@@ -46,7 +47,7 @@ class WorkoutRepository(database: AppDatabase) {
         return queries.getAllExercises().executeAsList().map {
             Exercise(
                 id = it.id,
-                name = it.name,
+                nameKey = ExerciseNameKey.fromValue(it.nameKey),
                 type = ExerciseType.valueOf(it.type),
                 pointsCoefficient = it.pointsCoefficient
             )
@@ -60,7 +61,7 @@ class WorkoutRepository(database: AppDatabase) {
                 id = it.id.toString(),
                 exercise = Exercise(
                     id = it.exerciseId,
-                    name = it.exerciseName,
+                    nameKey = ExerciseNameKey.fromValue(it.exerciseName),
                     type = ExerciseType.valueOf(it.exerciseType),
                     pointsCoefficient = it.pointsCoefficient
                 ),
@@ -129,7 +130,7 @@ class WorkoutRepository(database: AppDatabase) {
                 id = entity.id.toString(),
                 exercise = Exercise(
                     id = entity.exerciseId,
-                    name = entity.exerciseName,
+                    nameKey = ExerciseNameKey.fromValue(entity.exerciseName),
                     type = ExerciseType.valueOf(entity.exerciseType),
                     pointsCoefficient = entity.pointsCoefficient
                 ),
@@ -257,6 +258,24 @@ class WorkoutRepository(database: AppDatabase) {
 
     fun getActiveDaysCount(): Int {
         return queries.getActiveDaysCount().executeAsOneOrNull()?.toInt() ?: 0
+    }
+
+    fun getSetCountBetweenHours(startHour: Int, endHour: Int): Int {
+        return queries.getSetCountByHour(startHour.toLong(), endHour.toLong()).executeAsOne()
+            .toInt()
+    }
+
+    fun getWorkoutCountOnDate(date: LocalDate): Int {
+        return queries.getWorkoutCountOnDate(date.toString()).executeAsOne().toInt()
+    }
+
+    fun getTotalDistanceForExercise(exerciseNameKey: String): Int {
+        return queries.getTotalDistanceForExercise(exerciseNameKey)
+            .executeAsOneOrNull()?.sum?.toInt() ?: 0
+    }
+
+    fun getTotalWeightLifted(): Double {
+        return queries.getTotalWeightLifted().executeAsOneOrNull()?.sum ?: 0.0
     }
 
 }

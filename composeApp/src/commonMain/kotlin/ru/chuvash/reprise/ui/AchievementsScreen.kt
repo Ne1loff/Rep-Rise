@@ -30,8 +30,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import org.koin.compose.koinInject
+import reprise.composeapp.generated.resources.Res
+import reprise.composeapp.generated.resources.navigation_back
+import reprise.composeapp.generated.resources.screen_achievements
 import ru.chuvash.reprise.presentation.AchievementsViewModel
 import ru.chuvash.reprise.presentation.UiAchievement
+import org.jetbrains.compose.resources.stringResource as res
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,10 +52,10 @@ fun AchievementsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Достижения") },
+                title = { Text(res(Res.string.screen_achievements)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Назад")
+                        Icon(Icons.Default.ArrowBack, res(Res.string.navigation_back))
                     }
                 }
             )
@@ -84,9 +88,12 @@ private fun AchievementItem(uiAchievement: UiAchievement) {
             )
             Spacer(Modifier.width(16.dp))
             Column {
-                Text(uiAchievement.achievement.title, style = MaterialTheme.typography.titleMedium)
                 Text(
-                    uiAchievement.achievement.description,
+                    res(uiAchievement.achievement.title),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    res(uiAchievement.achievement.description),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }

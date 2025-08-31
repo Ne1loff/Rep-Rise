@@ -51,8 +51,10 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DayOfWeek
 import org.koin.compose.koinInject
+import reprise.composeapp.generated.resources.*
 import ru.chuvash.reprise.data.SwipeAction
 import ru.chuvash.reprise.presentation.SettingsViewModel
+import org.jetbrains.compose.resources.stringResource as res
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -97,12 +99,12 @@ fun SettingsScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Настроки") },
+                title = { Text(res(Res.string.screen_settings)) },
                 navigationIcon = {
                     // Скрываем кнопку "назад" после восстановления
                     if (!state.restoreCompleted) {
                         IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.Default.ArrowBack, "Назад")
+                            Icon(Icons.Default.ArrowBack, res(Res.string.navigation_back))
                         }
                     }
                 }
@@ -122,7 +124,7 @@ fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 item {
-                    Text("План на неделю", style = MaterialTheme.typography.titleMedium)
+                    Text(res(Res.string.settings_weekly_plan), style = MaterialTheme.typography.titleMedium)
                     Spacer(Modifier.height(8.dp))
 
                     // Показываем либо общую настройку, либо заголовок детальной
@@ -132,7 +134,7 @@ fun SettingsScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Детальная настройка", style = MaterialTheme.typography.bodyLarge)
+                            Text(res(Res.string.settings_detailed_setup), style = MaterialTheme.typography.bodyLarge)
                             ExpandButton(
                                 isExpanded = true,
                                 onClick = { isWeeklyPlanExpanded = false }
@@ -140,7 +142,7 @@ fun SettingsScreen(
                         }
                     } else {
                         DayGoalEditor(
-                            label = "Общая цель на день",
+                            label = res(Res.string.settings_common_goal_for_day),
                             target = commonGoalValue ?: 0,
                             onTargetChange = { newTarget ->
                                 viewModel.saveCommonGoal(newTarget)
@@ -159,7 +161,7 @@ fun SettingsScreen(
                 if (isWeeklyPlanExpanded) {
                     items(DayOfWeek.entries.toTypedArray()) { day ->
                         DayGoalEditor(
-                            label = day.localizedName(),
+                            label = day.toResource(),
                             target = state.weeklyPlan[day] ?: 0,
                             onTargetChange = { newTarget ->
                                 viewModel.saveDayGoal(day, newTarget)
@@ -170,7 +172,7 @@ fun SettingsScreen(
 
                 item {
                     HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-                    Text("Настройки приложения", style = MaterialTheme.typography.titleMedium)
+                    Text(res(Res.string.settings_app_settings), style = MaterialTheme.typography.titleMedium)
                     Spacer(Modifier.height(16.dp))
 
                     // Настройка свайпа
@@ -192,27 +194,27 @@ fun SettingsScreen(
                             defaultReps = filtered
                             viewModel.setDefaultReps(filtered)
                         },
-                        label = { Text("Количество по умолчанию") },
+                        label = { Text(res(Res.string.settings_default_reps)) },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
 
                 item {
                     HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-                    Text("Резервное копирование", style = MaterialTheme.typography.titleMedium)
+                    Text(res(Res.string.settings_backup_and_restore), style = MaterialTheme.typography.titleMedium)
                     Spacer(Modifier.height(8.dp))
                     Button(
                         onClick = { viewModel.createBackup() },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Создать резервную копию")
+                        Text(res(Res.string.settings_create_backup))
                     }
                     Spacer(Modifier.height(8.dp))
                     Button(
                         onClick = { viewModel.restoreBackup() },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Восстановить из копии")
+                        Text(res(Res.string.settings_restore_from_backup))
                     }
                 }
             }
@@ -226,7 +228,7 @@ private fun ExpandButton(isExpanded: Boolean, onClick: () -> Unit) {
     IconButton(onClick = onClick) {
         Icon(
             Icons.Default.ExpandMore,
-            contentDescription = "Развернуть/Свернуть",
+            contentDescription = res(Res.string.settings_cd_expand),
             modifier = Modifier.rotate(rotation)
         )
     }
@@ -248,13 +250,13 @@ private fun RestoreCompletedOverlay(modifier: Modifier = Modifier) {
             )
             Spacer(Modifier.height(16.dp))
             Text(
-                text = "Восстановление завершено",
+                text = res(Res.string.settings_restore_completed),
                 style = MaterialTheme.typography.headlineSmall,
                 textAlign = TextAlign.Center
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                text = "Пожалуйста, закройте и снова откройте приложение, чтобы применить изменения.",
+                text = res(Res.string.settings_restart_app_after_restore),
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center
             )
@@ -300,13 +302,13 @@ private fun SwipeActionSelector(
 ) {
     var isDropdownExpanded by remember { mutableStateOf(false) }
 
-    Text("Действие по свайпу", style = MaterialTheme.typography.bodyLarge)
+    Text(res(Res.string.settings_swipe_action), style = MaterialTheme.typography.bodyLarge)
     ExposedDropdownMenuBox(
         expanded = isDropdownExpanded,
         onExpandedChange = { isDropdownExpanded = !isDropdownExpanded }
     ) {
         OutlinedTextField(
-            value = selectedAction.toRussian(),
+            value = selectedAction.toResource(),
             onValueChange = {},
             readOnly = true,
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDropdownExpanded) },
@@ -318,7 +320,7 @@ private fun SwipeActionSelector(
         ) {
             SwipeAction.entries.forEach { action ->
                 DropdownMenuItem(
-                    text = { Text(action.toRussian()) },
+                    text = { Text(action.toResource()) },
                     onClick = {
                         onActionSelected(action)
                         isDropdownExpanded = false
@@ -329,18 +331,26 @@ private fun SwipeActionSelector(
     }
 }
 
-private fun SwipeAction.toRussian(): String = when (this) {
-    SwipeAction.DELETE -> "Удалить"
-    SwipeAction.EDIT -> "Изменить"
-    SwipeAction.NONE -> "Ничего"
+@Composable
+private fun SwipeAction.toResource(): String {
+    val resource = when (this) {
+        SwipeAction.DELETE -> Res.string.settings_swipe_action_delete
+        SwipeAction.EDIT -> Res.string.settings_swipe_action_edit
+        SwipeAction.NONE -> Res.string.settings_swipe_action_none
+    }
+    return res(resource)
 }
 
-private fun DayOfWeek.localizedName(): String = when (this) {
-    DayOfWeek.MONDAY -> "Понедельник"
-    DayOfWeek.TUESDAY -> "Вторник"
-    DayOfWeek.WEDNESDAY -> "Среда"
-    DayOfWeek.THURSDAY -> "Четверг"
-    DayOfWeek.FRIDAY -> "Пятница"
-    DayOfWeek.SATURDAY -> "Суббота"
-    DayOfWeek.SUNDAY -> "Воскресенье"
+@Composable
+private fun DayOfWeek.toResource(): String {
+    val resource = when (this) {
+        DayOfWeek.MONDAY -> Res.string.day_monday
+        DayOfWeek.TUESDAY -> Res.string.day_tuesday
+        DayOfWeek.WEDNESDAY -> Res.string.day_wednesday
+        DayOfWeek.THURSDAY -> Res.string.day_thursday
+        DayOfWeek.FRIDAY -> Res.string.day_friday
+        DayOfWeek.SATURDAY -> Res.string.day_saturday
+        DayOfWeek.SUNDAY -> Res.string.day_sunday
+    }
+    return res(resource)
 }

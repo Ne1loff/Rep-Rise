@@ -2,7 +2,6 @@
 
 package ru.chuvash.reprise.presentation
 
-import DistanceUnit
 import Exercise
 import ExerciseType
 import kotlinx.coroutines.Dispatchers
@@ -13,8 +12,17 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
+import org.jetbrains.compose.resources.StringResource
+import reprise.composeapp.generated.resources.Res
+import reprise.composeapp.generated.resources.addedit_unit_kilometer
+import reprise.composeapp.generated.resources.addedit_unit_meter
 import ru.chuvash.reprise.data.WorkoutRepository
 import ru.chuvash.reprise.domain.services.WorkoutService
+
+enum class DistanceUnit(val label: StringResource) {
+    METERS(Res.string.addedit_unit_meter),
+    KILOMETERS(Res.string.addedit_unit_kilometer)
+}
 
 data class AddEditSetState(
     val isLoading: Boolean = true,
@@ -46,11 +54,11 @@ class AddEditSetViewModel(
     private val _selectedExercise = MutableStateFlow<Exercise?>(null)
     private val _reps = MutableStateFlow("")
     private val _weight = MutableStateFlow("")
-    private val _durationHours = MutableStateFlow<String>("")
-    private val _durationMinutes = MutableStateFlow<String>("")
-    private val _durationSeconds = MutableStateFlow<String>("")
-    private val _distance = MutableStateFlow<String>("")
-    private val _distanceUnit = MutableStateFlow<DistanceUnit>(DistanceUnit.METERS)
+    private val _durationHours = MutableStateFlow("")
+    private val _durationMinutes = MutableStateFlow("")
+    private val _durationSeconds = MutableStateFlow("")
+    private val _distance = MutableStateFlow("")
+    private val _distanceUnit = MutableStateFlow(DistanceUnit.METERS)
     private val _effortPoints = MutableStateFlow(0)
     private val _isSaveEnabled = MutableStateFlow(false)
     private val _isFinished = MutableStateFlow(false)
@@ -182,7 +190,7 @@ class AddEditSetViewModel(
     }
 
     fun onDistanceUnitChanged() {
-        val newUnit = when(_distanceUnit.value) {
+        val newUnit = when (_distanceUnit.value) {
             DistanceUnit.METERS -> DistanceUnit.KILOMETERS
             DistanceUnit.KILOMETERS -> DistanceUnit.METERS
         }
@@ -222,7 +230,7 @@ class AddEditSetViewModel(
     private fun validateInput() {
 
         val exercise = _selectedExercise.value ?: run {
-            _isSaveEnabled.value = false;
+            _isSaveEnabled.value = false
             return
         }
 

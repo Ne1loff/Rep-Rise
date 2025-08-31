@@ -25,12 +25,10 @@ class AchievementsViewModel(private val repository: WorkoutRepository) : BaseVie
     fun loadAchievements() {
         viewModelScope.launch {
             val unlockedIds = repository.getUnlockedAchievementIds()
-            val uiAchievements = AchievementsList.all.map {
-                UiAchievement(
-                    achievement = it,
-                    isUnlocked = it.id in unlockedIds
-                )
-            }
+            val uiAchievements = AchievementsList.all
+                .filter { !it.isSecret || it.id in unlockedIds }
+                .map { UiAchievement(achievement = it, isUnlocked = it.id in unlockedIds) }
+                .sortedByDescending { it.isUnlocked }
             _uiState.update { it.copy(achievements = uiAchievements) }
         }
     }

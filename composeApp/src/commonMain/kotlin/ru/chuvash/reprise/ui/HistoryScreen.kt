@@ -46,15 +46,31 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.compose.resources.StringResource
 import org.koin.compose.koinInject
+import reprise.composeapp.generated.resources.Res
+import reprise.composeapp.generated.resources.common_today
+import reprise.composeapp.generated.resources.day_friday_short
+import reprise.composeapp.generated.resources.day_monday_short
+import reprise.composeapp.generated.resources.day_saturday_short
+import reprise.composeapp.generated.resources.day_sunday_short
+import reprise.composeapp.generated.resources.day_thursday_short
+import reprise.composeapp.generated.resources.day_tuesday_short
+import reprise.composeapp.generated.resources.day_wednesday_short
+import reprise.composeapp.generated.resources.history_non_sets_for_day
+import reprise.composeapp.generated.resources.history_sets_for_day
+import reprise.composeapp.generated.resources.navigation_back
+import reprise.composeapp.generated.resources.screen_history
 import ru.chuvash.reprise.data.model.DailyGoal
 import ru.chuvash.reprise.data.model.WorkoutSet
 import ru.chuvash.reprise.presentation.HistoryViewModel
 import ru.chuvash.reprise.ui.components.WorkoutSetCard
 import ru.chuvash.reprise.ui.formatters.toLocaleMonth
+import ru.chuvash.reprise.ui.formatters.toLocaleMonthDay
 import ru.chuvash.reprise.ui.theme.HistorySetsColors
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
+import org.jetbrains.compose.resources.stringResource as res
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,10 +93,10 @@ fun HistoryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("История") },
+                title = { Text(res(Res.string.screen_history)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Назад")
+                        Icon(Icons.Default.ArrowBack, res(Res.string.navigation_back))
                     }
                 }
             )
@@ -102,8 +118,11 @@ fun HistoryScreen(
 
             AnimatedVisibility(visible = state.selectedDate != null) {
                 Column(modifier = Modifier.padding(top = 16.dp)) {
-                    Text(
-                        "Подходы за ${displayedDate?.day} ${displayedDate?.month?.name}",
+                                        Text(
+                        res(
+                            Res.string.history_sets_for_day,
+                            displayedDate?.toLocaleMonthDay() ?: res(Res.string.common_today)
+                        ),
                         style = MaterialTheme.typography.titleLarge
                     )
                     Spacer(Modifier.height(8.dp))
@@ -114,7 +133,7 @@ fun HistoryScreen(
                             }
                         }
                     } else {
-                        Text("В этот день подходов не было.")
+                        Text(res(Res.string.history_non_sets_for_day))
                     }
                 }
             }
@@ -134,12 +153,12 @@ private fun CalendarView(
     val firstDayOfWeek = firstDayOfMonth.dayOfWeek.isoDayNumber // 1 for Monday, 7 for Sunday
     val daysInMonth = yearMonth.numberOfDays
 
-    val weekDays = listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс")
+    val weekDays = dayOfWeekResources()
 
     Column {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
-            weekDays.forEach { day ->
-                Text(day, style = MaterialTheme.typography.bodySmall)
+            weekDays.forEach { dayResource ->
+                Text(res(dayResource), style = MaterialTheme.typography.bodySmall)
             }
         }
         Spacer(Modifier.height(8.dp))
@@ -192,4 +211,16 @@ private fun CalendarView(
             }
         }
     }
+}
+
+private fun dayOfWeekResources(): List<StringResource> {
+    return listOf(
+        Res.string.day_monday_short,
+        Res.string.day_tuesday_short,
+        Res.string.day_wednesday_short,
+        Res.string.day_thursday_short,
+        Res.string.day_friday_short,
+        Res.string.day_saturday_short,
+        Res.string.day_sunday_short
+    )
 }

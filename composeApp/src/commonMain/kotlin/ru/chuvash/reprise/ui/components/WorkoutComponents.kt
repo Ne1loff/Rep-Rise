@@ -1,15 +1,39 @@
 package ru.chuvash.reprise.ui.components
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.Resource
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
+import reprise.composeapp.generated.resources.Res
+import reprise.composeapp.generated.resources.common_error
+import reprise.composeapp.generated.resources.component_workout_distance
+import reprise.composeapp.generated.resources.component_workout_duration
+import reprise.composeapp.generated.resources.component_workout_points
+import reprise.composeapp.generated.resources.component_workout_reps
+import reprise.composeapp.generated.resources.component_workout_weight_kg
 import ru.chuvash.reprise.data.model.WorkoutSet
+import ru.chuvash.reprise.presentation.DistanceUnit
 import kotlin.math.roundToInt
+import org.jetbrains.compose.resources.stringResource as res
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -20,7 +44,10 @@ fun WorkoutSetCard(set: WorkoutSet) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(set.exercise.name, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    stringResource(set.exercise.nameKey.resource),
+                    style = MaterialTheme.typography.titleMedium
+                )
                 Text(
                     text = set.dateTime.time.toString().substringBefore('.'),
                     style = MaterialTheme.typography.bodySmall,
@@ -35,28 +62,43 @@ fun WorkoutSetCard(set: WorkoutSet) {
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = " очков",
+                    text = pluralStringResource(
+                        Res.plurals.component_workout_points,
+                        quantity = set.effortPoints
+                    ),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
                 )
             }
         }
 
-        val chipsData = remember(set) {
+        val chipsData: List<Pair<StringResource, Array<Any>>> = remember(set) {
             buildList {
-                set.reps?.let { if (it > 0) add("Повторения: $it") }
-                set.weight?.let { if (it > 0) add("Вес: $it кг") }
-                set.durationSeconds?.let { if (it > 0) add("Время: ${formatDurationToHms(it)}") }
+                set.reps?.let { if (it > 0) add(Res.string.component_workout_reps to arrayOf(it)) }
+                set.weight?.let {
+                    if (it > 0) add(
+                        Res.string.component_workout_weight_kg to arrayOf(
+                            it
+                        )
+                    )
+                }
+                set.durationSeconds?.let {
+                    if (it > 0) add(
+                        Res.string.component_workout_duration to arrayOf(
+                            formatDurationToHms(it)
+                        )
+                    )
+                }
                 set.distanceMeters?.let {
                     if (it > 0) {
                         val (value, unit) = if (it >= 1000) {
                             val km = it / 1000.0
                             val roundedKm = (km * 10).roundToInt() / 10.0
-                            roundedKm.toString() to "км"
+                            roundedKm to DistanceUnit.KILOMETERS
                         } else {
-                            "$it" to "м"
+                            it to DistanceUnit.METERS
                         }
-                        add("Дистанция: $value $unit")
+                        add(Res.string.component_workout_distance to arrayOf(value, unit.label))
                     }
                 }
             }
@@ -68,16 +110,32 @@ fun WorkoutSetCard(set: WorkoutSet) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                chipsData.forEach { label ->
+                chipsData.forEach { (resource, args) ->
+                    val formatedArgs =
+                        args.map { computeIfResourceOrReturn(it) }.toTypedArray<Any>()
                     AssistChip(
                         onClick = { /* No action */ },
-                        label = { Text(label, style = MaterialTheme.typography.labelMedium) }
+                        label = {
+                            Text(
+                                res(resource, *formatedArgs),
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        }
                     )
                 }
             }
         } else {
             Spacer(modifier = Modifier.height(4.dp))
         }
+    }
+}
+
+@Composable
+private fun computeIfResourceOrReturn(mayBeResource: Any): String {
+    if (mayBeResource !is Resource) return mayBeResource.toString()
+    return when (mayBeResource) {
+        is StringResource -> stringResource(mayBeResource)
+        else -> stringResource(Res.string.common_error)
     }
 }
 

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<resources>
+    <string name="app_name">Rep:Rise</string>
+
+    <!--  Дни недели  -->
+    <string name="day_monday">Понедельник</string>
+    <string name="day_tuesday">Вторник</string>
+    <string name="day_wednesday">Среда</string>
+    <string name="day_thursday">Четверг</string>
+    <string name="day_friday">Пятница</string>
+    <string name="day_saturday">Суббота</string>
+    <string name="day_sunday">Воскресенье</string>
+
+    <string name="day_monday_short">Пн</string>
+    <string name="day_tuesday_short">Вт</string>
+    <string name="day_wednesday_short">Ср</string>
+    <string name="day_thursday_short">Чт</string>
+    <string name="day_friday_short">Пт</string>
+    <string name="day_saturday_short">Сб</string>
+    <string name="day_sunday_short">Вс</string>
+
+    <!-- Общие -->
+    <string name="common_today">Сегодня</string>
+    <string name="common_yesterday">Вчера</string>
+    <string name="common_save">Сохранить</string>
+    <string name="common_exercise">Упражнение</string>
+    <string name="common_effort_points">%1$d очков</string>
+    <string name="common_error">Ошибка</string>
+    <string name="common_loading">Загрузка...</string>
+    <string name="common_no_data">Пока нет данных для отображения.</string>
+
+    <!--  Компоненты  -->
+    <string name="component_workout_reps">Повторения: %1$s</string>
+    <string name="component_workout_weight_kg">Вес: %1$sкг</string>
+    <string name="component_workout_duration">Время: %1$s</string>
+    <string name="component_workout_distance">Дистанция: %1$s%2$s</string>
+    <plurals name="component_workout_points">
+        <item quantity="one">очко</item>
+        <item quantity="few">очка</item>
+        <item quantity="many">очков</item>
+    </plurals>
+
+    <!--  Навигация  -->
+    <string name="navigation_back">Назад</string>
+    <string name="navigation_forward">Вперед</string>
+
+    <!-- Экраны -->
+    <string name="screen_dashboard">Главная</string>
+    <string name="screen_history">История</string>
+    <string name="screen_statistics">Статистика</string>
+    <string name="screen_achievements">Достижения</string>
+    <string name="screen_settings">Настройки</string>
+
+    <!-- Экран Dashboard -->
+    <string name="dashboard_previous_day">Предыдущий день</string>
+    <string name="dashboard_next_day">Следующий день</string>
+    <string name="dashboard_todays_sets">Сегодняшние подходы</string>
+    <string name="dashboard_goal_progress">Цель на день</string>
+    <string name="dashboard_edit">Изменить</string>
+    <string name="dashboard_delete">Удалить</string>
+    <string name="dashboard_add_set">Добавить подход</string>
+    <string name="dashboard_streak">Серия</string>
+    <plurals name="dashboard_streak_days">
+        <item quantity="one">%1$d день</item>
+        <item quantity="few">%1$d дня</item>
+        <item quantity="many">%1$d дней</item>
+    </plurals>
+
+    <!-- Экран Add/Edit Set -->
+    <string name="addedit_select_exercise">Выберите упражнение</string>
+    <string name="addedit_add_set">Добавить подход</string>
+    <string name="addedit_edit_set">Изменить подход</string>
+    <string name="addedit_reps">Повторения</string>
+    <string name="addedit_weight_kg">Вес (кг)</string>
+    <string name="addedit_duration">Длительность</string>
+    <string name="addedit_hours">Часы</string>
+    <string name="addedit_minutes">Мин</string>
+    <string name="addedit_seconds">Сек</string>
+    <string name="addedit_distance">Дистанция</string>
+    <string name="addedit_unit_meter">м</string>
+    <string name="addedit_unit_kilometer">км</string>
+
+    <!-- Экран Настроек -->
+    <string name="settings_weekly_plan">План на неделю</string>
+    <string name="settings_common_goal_for_day">Общая цель на день</string>
+    <string name="settings_detailed_setup">Детальная настройка</string>
+    <string name="settings_app_settings">Настройки приложения</string>
+    <string name="settings_swipe_action">Действие по свайпу</string>
+    <string name="settings_swipe_action_delete">Удалить</string>
+    <string name="settings_swipe_action_edit">Изменить</string>
+    <string name="settings_swipe_action_none">Ничего</string>
+    <string name="settings_default_reps">Количество по умолчанию</string>
+    <string name="settings_backup_and_restore">Резервное копирование</string>
+    <string name="settings_create_backup">Создать резервную копию</string>
+    <string name="settings_restore_from_backup">Восстановить из копии</string>
+    <string name="settings_restore_completed">Восстановление завершено</string>
+    <string name="settings_restart_app_after_restore">Пожалуйста, закройте и снова откройте приложение, чтобы применить изменения</string>
+    <string name="settings_cd_expand">Развернуть/Свернуть</string>
+
+    <!-- Экран Истории -->
+    <string name="history_sets_for_day">Подходы за %1$s</string>
+    <string name="history_non_sets_for_day">В этот день подходов не было</string>
+
+    <!-- Упражнения -->
+    <string name="exercise_pushups">Отжимания</string>
+    <string name="exercise_squats">Приседания</string>
+    <string name="exercise_pullups">Подтягивания</string>
+    <string name="exercise_bench_press">Жим лежа</string>
+    <string name="exercise_plank">Планка</string>
+    <string name="exercise_running">Бег</string>
+
+    <!--  Достижения  -->
+    <string name="achieve_received">Достижение получено: "%1$s"</string>
+    <string name="achieve_first_workout_title">Первый шаг</string>
+    <string name="achieve_streak_3_title">Начало положено</string>
+    <string name="achieve_streak_7_title">Стойкий</string>
+    <string name="achieve_total_points_1000_title">Тысячник</string>
+    <string name="achieve_total_points_5000_title">Титан</string>
+    <string name="achieve_streak_30_title">Мастер постоянства</string>
+    <string name="achieve_total_weight_10000_title">Повелитель железа</string>
+    <string name="achieve_marathon_runner_title">Марафонец</string>
+    <string name="achieve_early_bird_title">Ранняя пташка</string>
+    <string name="achieve_night_owl_title">Ночная сова</string>
+    <string name="achieve_weekend_warrior_title">Воин выходного дня</string>
+    <string name="achieve_rest_day_champion_title">Чемпион дня отдыха</string>
+    <string name="achieve_time_traveler_title">Путешественник во времени</string>
+    <string name="achieve_curious_title">Любопытный</string>
+
+    <string name="achieve_first_workout_description">Выполнить первую тренировку</string>
+    <string name="achieve_streak_3_description">Удерживать стрик 3 дня</string>
+    <string name="achieve_streak_7_description">Удерживать стрик 7 дней</string>
+    <string name="achieve_total_points_1000_description">Набрать 1000 очков в сумме</string>
+    <string name="achieve_total_points_5000_description">Набрать 5000 очков в сумме</string>
+    <string name="achieve_streak_30_description">Удерживать стрик 30 дней</string>
+    <string name="achieve_total_weight_10000_description">Поднять в сумме 10.000 кг</string>
+    <string name="achieve_marathon_runner_description">Пробежать в сумме 42.2 км</string>
+    <string name="achieve_early_bird_description">Завершить тренировку до 7 утра</string>
+    <string name="achieve_night_owl_description">Завершить тренировку после 10 вечера</string>
+    <string name="achieve_weekend_warrior_description">Тренироваться в СБ и ВС на одной неделе</string>
+    <string name="achieve_rest_day_champion_description">Правильно отдохнуть в день отдыха</string>
+    <string name="achieve_time_traveler_description">Заглянуть в далекое прошлое</string>
+    <string name="achieve_curious_description">Посетить все экраны за одну сессию</string>
+</resources>
