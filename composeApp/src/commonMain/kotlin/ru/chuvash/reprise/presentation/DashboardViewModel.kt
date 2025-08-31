@@ -48,7 +48,8 @@ data class DashboardState(
 )
 
 class DashboardViewModel(
-    private val repository: WorkoutRepository
+    private val repository: WorkoutRepository,
+    private val achievementService: AchievementService
 ) : BaseViewModel() {
     private val _displayedDate =
         MutableStateFlow(Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date)
@@ -119,6 +120,11 @@ class DashboardViewModel(
                 repository.updateCompletedPointsForDate(date, totalPoints)
             }
             val updatedGoal = goal.copy(completedPoints = totalPoints)
+
+            val unlocked = achievementService.checkAndUnlockAchievements()
+            if (unlocked.isNotEmpty()) {
+                _newlyUnlockedAchievements.value = unlocked
+            }
 
             _currentGoal.value = updatedGoal
             _setsForDate.value = sets

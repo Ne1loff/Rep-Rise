@@ -28,10 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -45,10 +42,8 @@ import androidx.compose.ui.unit.sp
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.isoDayNumber
-import kotlinx.datetime.number
 import kotlinx.datetime.plus
 import org.koin.compose.koinInject
-import ru.chuvash.reprise.data.model.WeeklySummary
 import ru.chuvash.reprise.presentation.StatisticsState
 import ru.chuvash.reprise.presentation.StatisticsViewModel
 import ru.chuvash.reprise.presentation.StatsPeriod
@@ -193,7 +188,7 @@ private fun BarChart(data: List<ChartDataPoint>) {
 @Composable
 private fun StatisticsSummary(state: StatisticsState) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        StatCard("Всего повторений", state.totalReps.toString())
+        StatCard("Всего очков", state.totalPoints.toString())
         StatCard("Лучшая неделя", state.bestWeekReps.toString())
         StatCard("Среднее в день", state.averageRepsPerDay.toString())
     }

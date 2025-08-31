@@ -10,17 +10,17 @@ class AchievementService(private val repository: WorkoutRepository) {
     fun checkAndUnlockAchievements(): List<Achievement> {
         val unlockedIds = repository.getUnlockedAchievementIds()
         val streak = repository.calculateCurrentStreak()
-        val totalReps = repository.getTotalEffortPoints()
+        val totalEffortPoints = repository.getTotalEffortPoints()
         val newlyUnlocked = mutableListOf<Achievement>()
 
         AchievementsList.all.forEach { achievement ->
             if (achievement.id !in unlockedIds) {
                 val shouldUnlock = when (achievement.id) {
-                    "first_workout" -> totalReps > 0
+                    "first_workout" -> totalEffortPoints > 0
                     "streak_3" -> streak >= 3
                     "streak_7" -> streak >= 7
-                    "total_reps_1000" -> totalReps >= 1000
-                    "total_reps_5000" -> totalReps >= 5000
+                    "total_points_1000" -> totalEffortPoints >= 1000
+                    "total_points_5000" -> totalEffortPoints >= 5000
                     else -> false
                 }
                 if (shouldUnlock) {

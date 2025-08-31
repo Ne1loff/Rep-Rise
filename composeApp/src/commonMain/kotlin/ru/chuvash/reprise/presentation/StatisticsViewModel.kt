@@ -14,7 +14,7 @@ data class StatisticsState(
     val selectedPeriod: StatsPeriod = StatsPeriod.WEEKS,
     val weeklySummary: List<WeeklySummary> = emptyList(),
     val dailySummary: List<DailySummary> = emptyList(),
-    val totalReps: Int = 0,
+    val totalPoints: Int = 0,
     val bestWeekReps: Int = 0,
     val averageRepsPerDay: Int = 0,
     val isLoading: Boolean = true
@@ -30,16 +30,16 @@ class StatisticsViewModel(private val repository: WorkoutRepository) : BaseViewM
 
             val weeklySummary = repository.getWeeklySummary()
             val dailySummary = repository.getDailySummaryForLast30Days()
-            val totalReps = repository.getTotalEffortPoints()
+            val totalPoints = repository.getTotalEffortPoints()
             val activeDays = repository.getActiveDaysCount()
             val bestWeek = weeklySummary.maxOfOrNull { it.totalReps } ?: 0
-            val average = if (activeDays > 0) totalReps / activeDays else 0
+            val average = if (activeDays > 0) totalPoints / activeDays else 0
 
             _uiState.update {
                 it.copy(
                     weeklySummary = weeklySummary.reversed(),
                     dailySummary = dailySummary.reversed(),
-                    totalReps = totalReps,
+                    totalPoints = totalPoints,
                     bestWeekReps = bestWeek,
                     averageRepsPerDay = average,
                     isLoading = false

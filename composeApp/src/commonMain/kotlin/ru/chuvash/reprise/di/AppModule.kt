@@ -38,7 +38,7 @@ fun commonModule() = module {
     factory { WorkoutService() }
 
     // Presentation (ViewModels)
-    factory { DashboardViewModel(repository = get()) }
+    factory { DashboardViewModel(repository = get(), achievementService = get()) }
     factory { SettingsViewModel(repository = get(), backupManager = get(), prefsRepository = get()) }
     factory { HistoryViewModel(repository = get()) }
     factory { AchievementsViewModel(repository = get()) }
