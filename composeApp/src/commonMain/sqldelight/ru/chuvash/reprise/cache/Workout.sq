@@ -121,6 +121,9 @@ SELECT count(DISTINCT date(timestamp, 'unixepoch')) FROM WorkoutSetEntity;
 getGoalByDate:
 SELECT * FROM DailyGoalEntity WHERE date = ?;
 
+getAllGoals:
+SELECT * FROM DailyGoalEntity ORDER BY date DESC;
+
 upsertGoal {
     UPDATE DailyGoalEntity
     SET targetPoints = :targetPoints,
@@ -176,3 +179,43 @@ SELECT sum(distanceMeters) FROM WorkoutSetEntity JOIN ExerciseEntity ON WorkoutS
 -- Для "Повелителя железа"
 getTotalWeightLifted:
 SELECT sum(reps * weight) FROM WorkoutSetEntity WHERE reps IS NOT NULL AND weight IS NOT NULL;
+
+---
+--- Запросы для Статистики (Statistics)
+---
+
+-- Получить сумму очков по дням для выбранной недели
+getDailySummaryForWeek:
+SELECT
+    date(`timestamp`, 'unixepoch') AS day,
+    sum(effortPoints) AS totalPoints
+FROM WorkoutSetEntity
+WHERE date(`timestamp`, 'unixepoch') BETWEEN :startDate AND :endDate
+GROUP BY day
+ORDER BY day;
+
+-- Получить сумму очков по неделям для выбранного месяца
+getWeeklySummaryForMonth:
+SELECT
+    strftime('%Y-%W', `timestamp`, 'unixepoch', 'weekday 0', '-6 days') AS weekId,
+    sum(effortPoints) AS totalPoints
+FROM WorkoutSetEntity
+WHERE strftime('%Y-%m', `timestamp`, 'unixepoch') = :yearMonth
+GROUP BY weekId
+ORDER BY weekId;
+
+-- Получить сумму очков по упражнениям для выбранного дня
+getExerciseSummaryForDay:
+SELECT
+    ee.nameKey,
+    sum(wse.effortPoints) AS totalPoints
+FROM WorkoutSetEntity AS wse
+JOIN ExerciseEntity AS ee ON wse.exerciseId = ee.id
+WHERE date(wse.timestamp, 'unixepoch') = :date
+GROUP BY ee.nameKey
+ORDER BY totalPoints DESC;
+
+getActiveDaysCountForPeriod:
+SELECT count(DISTINCT date(`timestamp`, 'unixepoch'))
+FROM WorkoutSetEntity
+WHERE date(`timestamp`, 'unixepoch') BETWEEN :startDate AND :endDate;

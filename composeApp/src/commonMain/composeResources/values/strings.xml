@@ -42,6 +42,8 @@
     <!--  Навигация  -->
     <string name="navigation_back">Back</string>
     <string name="navigation_forward">Forward</string>
+    <string name="navigation_next">Next</string>
+    <string name="navigation_previous">Previous</string>
 
     <!-- Экраны -->
     <string name="screen_dashboard">Dashboard</string>

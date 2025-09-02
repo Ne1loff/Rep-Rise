@@ -64,6 +64,7 @@ import reprise.composeapp.generated.resources.screen_history
 import ru.chuvash.reprise.data.model.DailyGoal
 import ru.chuvash.reprise.data.model.WorkoutSet
 import ru.chuvash.reprise.presentation.HistoryViewModel
+import ru.chuvash.reprise.ui.components.DateRangeSwitcher
 import ru.chuvash.reprise.ui.components.WorkoutSetCard
 import ru.chuvash.reprise.ui.formatters.toLocaleMonth
 import ru.chuvash.reprise.ui.formatters.toLocaleMonthDay
@@ -103,9 +104,12 @@ fun HistoryScreen(
         }
     ) { padding ->
         Column(Modifier.padding(padding).padding(16.dp)) {
-            Text(
-                "${state.yearMonth.firstDay.toLocaleMonth().uppercase()} ${state.yearMonth.year}",
-                style = MaterialTheme.typography.headlineMedium
+            DateRangeSwitcher(
+                label = "${state.yearMonth.firstDay.toLocaleMonth().uppercase()} ${state.yearMonth.year}",
+                labelStyle = MaterialTheme.typography.headlineMedium,
+                onPrevious = { viewModel.previousMonth() },
+                onNext = { viewModel.nextMonth() },
+                nextDisabled = state.yearMonth == viewModel.todayYearMonth
             )
             Spacer(Modifier.height(16.dp))
             CalendarView(
@@ -191,12 +195,12 @@ private fun CalendarView(
                 Box(
                     modifier = Modifier
                         .aspectRatio(1f)
-                        .clip(MaterialTheme.shapes.small)
+                        .clip(MaterialTheme.shapes.medium)
                         .background(color)
                         .border(
                             width = 1.dp,
                             color = borderColor,
-                            shape = MaterialTheme.shapes.small
+                            shape = MaterialTheme.shapes.medium
                         )
                         .pointerInput(date) {
                             detectTapGestures(

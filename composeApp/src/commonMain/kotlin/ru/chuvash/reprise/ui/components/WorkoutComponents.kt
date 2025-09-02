@@ -145,11 +145,12 @@ fun formatDurationToHms(totalSeconds: Int): String {
     val minutes = (totalSeconds % 3600) / 60
     val seconds = totalSeconds % 60
 
+    val h = hours.toString().padStart(2, '0')
     val m = minutes.toString().padStart(2, '0')
     val s = seconds.toString().padStart(2, '0')
 
     return if (hours > 0) {
-        "$hours:$m:$s"
+        "$h:$m:$s"
     } else {
         "$m:$s"
     }

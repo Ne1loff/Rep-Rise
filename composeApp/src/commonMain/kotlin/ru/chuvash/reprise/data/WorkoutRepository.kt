@@ -17,6 +17,7 @@ import kotlinx.datetime.toLocalDateTime
 import ru.chuvash.reprise.cache.AppDatabase
 import ru.chuvash.reprise.data.model.DailyGoal
 import ru.chuvash.reprise.data.model.DailySummary
+import ru.chuvash.reprise.data.model.ExerciseSummary
 import ru.chuvash.reprise.data.model.WeeklySummary
 import ru.chuvash.reprise.data.model.WorkoutSet
 import kotlin.time.Clock.System
@@ -163,6 +164,16 @@ class WorkoutRepository(database: AppDatabase) {
         }
     }
 
+    fun getAllGoals(): List<DailyGoal> {
+        return queries.getAllGoals().executeAsList().map {
+            DailyGoal(
+                date = it.date,
+                targetPoints = it.targetPoints.toInt(),
+                completedPoints = it.completedPoints.toInt()
+            )
+        }
+    }
+
     fun saveGoal(goal: DailyGoal) {
         queries.upsertGoal(
             date = goal.date,
@@ -246,13 +257,13 @@ class WorkoutRepository(database: AppDatabase) {
 
     fun getWeeklySummary(): List<WeeklySummary> {
         return queries.getWeeklySummary().executeAsList().map {
-            WeeklySummary(weekId = it.weekId, totalReps = it.totalPoints?.toInt() ?: 0)
+            WeeklySummary(weekId = it.weekId, totalPoints = it.totalPoints?.toInt() ?: 0)
         }
     }
 
     fun getDailySummaryForLast30Days(): List<DailySummary> {
         return queries.getDailySummaryForLast30Days().executeAsList().map {
-            DailySummary(dayId = it.dayId, totalReps = it.totalPoints?.toInt() ?: 0)
+            DailySummary(day = it.dayId, totalPoints = it.totalPoints?.toInt() ?: 0)
         }
     }
 
@@ -276,6 +287,24 @@ class WorkoutRepository(database: AppDatabase) {
 
     fun getTotalWeightLifted(): Double {
         return queries.getTotalWeightLifted().executeAsOneOrNull()?.sum ?: 0.0
+    }
+
+    fun getDailySummaryForWeek(startDate: String, endDate: String): List<DailySummary> {
+        return queries.getDailySummaryForWeek(startDate, endDate).executeAsList().map {
+            DailySummary(it.day, it.totalPoints?.toInt() ?: 0)
+        }
+    }
+
+    fun getWeeklySummaryForMonth(yearMonth: String): List<WeeklySummary> {
+        return queries.getWeeklySummaryForMonth(yearMonth).executeAsList().map {
+            WeeklySummary(it.weekId, it.totalPoints?.toInt() ?: 0)
+        }
+    }
+
+    fun getExerciseSummaryForDay(date: String): List<ExerciseSummary> {
+        return queries.getExerciseSummaryForDay(date).executeAsList().map {
+            ExerciseSummary(it.nameKey, it.totalPoints?.toInt() ?: 0)
+        }
     }
 
 }

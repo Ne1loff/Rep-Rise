@@ -37,6 +37,3 @@ data class DailyGoal(
     val targetPoints: Int, // Теперь цель в очках
     val completedPoints: Int = 0
 )
-
-data class DailySummary(val dayId: String, val totalReps: Int)
-data class WeeklySummary(val weekId: String, val totalReps: Int)

@@ -10,6 +10,7 @@ import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 import ru.chuvash.reprise.data.WorkoutRepository
+import ru.chuvash.reprise.data.model.DailyGoal
 import ru.chuvash.reprise.domain.model.Achievement
 import ru.chuvash.reprise.domain.model.AchievementsList
 import kotlin.time.Clock
@@ -24,10 +25,49 @@ class AchievementService(private val repository: WorkoutRepository) {
         visitedScreens.add(screenName)
     }
 
-    fun checkAndUnlockAchievements(currentDate: LocalDate): List<Achievement> {
+    // ИСПРАВЛЕНИЕ 1: Переносим логику расчета стрика сюда и оптимизируем ее
+    fun calculateCurrentStreak(today: LocalDate, allRecentGoals: List<DailyGoal>): Int {
+        var streak = 0
+        var currentDate = today
+        val goalsMap = allRecentGoals.associateBy { LocalDate.parse(it.date) }
+
+        // Проверяем стрик, начиная с сегодняшнего дня
+        while (true) {
+            val goal = goalsMap[currentDate]
+            if (goal != null && goal.completedPoints >= goal.targetPoints) {
+                streak++
+                currentDate = currentDate.minus(1, DateTimeUnit.DAY)
+            } else {
+                break
+            }
+        }
+
+        // Если сегодня цель еще не выполнена, возможно, стрик закончился вчера
+        val currentDayGoal = goalsMap[today]
+        if (currentDayGoal == null || currentDayGoal.completedPoints < currentDayGoal.targetPoints) {
+            var yesterdayStreak = 0
+            var yesterday = today.minus(1, DateTimeUnit.DAY)
+            while(true) {
+                val goal = goalsMap[yesterday]
+                if (goal != null && goal.completedPoints >= goal.targetPoints) {
+                    yesterdayStreak++
+                    yesterday = yesterday.minus(1, DateTimeUnit.DAY)
+                } else {
+                    break
+                }
+            }
+            return yesterdayStreak
+        }
+
+        return streak
+    }
+
+    fun checkAndUnlockAchievements(
+        currentDate: LocalDate,
+        streak: Int,
+        totalPoints: Int
+    ): List<Achievement> {
         val unlockedIds = repository.getUnlockedAchievementIds()
-        val totalPoints = repository.getTotalEffortPoints()
-        val streak = repository.calculateCurrentStreak()
         val newlyUnlocked = mutableListOf<Achievement>()
         val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
 

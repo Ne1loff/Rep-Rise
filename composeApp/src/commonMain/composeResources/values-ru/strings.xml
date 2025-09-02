@@ -43,6 +43,8 @@
     <!--  Навигация  -->
     <string name="navigation_back">Назад</string>
     <string name="navigation_forward">Вперед</string>
+    <string name="navigation_next">Следующий</string>
+    <string name="navigation_previous">Предыдущий</string>
 
     <!-- Экраны -->
     <string name="screen_dashboard">Главная</string>
@@ -54,7 +56,7 @@
     <!-- Экран Dashboard -->
     <string name="dashboard_previous_day">Предыдущий день</string>
     <string name="dashboard_next_day">Следующий день</string>
-    <string name="dashboard_todays_sets">Сегодняшние подходы</string>
+    <string name="dashboard_todays_sets">Подходы на сегодня</string>
     <string name="dashboard_goal_progress">Цель на день</string>
     <string name="dashboard_edit">Изменить</string>
     <string name="dashboard_delete">Удалить</string>

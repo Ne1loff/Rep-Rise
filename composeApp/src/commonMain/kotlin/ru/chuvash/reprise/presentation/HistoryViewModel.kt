@@ -9,8 +9,11 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
+import kotlinx.datetime.minusMonth
 import kotlinx.datetime.number
+import kotlinx.datetime.plusMonth
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.yearMonth
 import ru.chuvash.reprise.data.WorkoutRepository
 import ru.chuvash.reprise.data.model.DailyGoal
 import ru.chuvash.reprise.data.model.WorkoutSet
@@ -26,11 +29,11 @@ data class HistoryState(
     val isLoading: Boolean = true
 )
 
-val LocalDate.yearMonth: YearMonth get() = YearMonth(this.year, this.month)
-
 class HistoryViewModel(private val repository: WorkoutRepository) : BaseViewModel() {
     private val _uiState = MutableStateFlow(HistoryState())
     val uiState = _uiState.asStateFlow()
+    val todayYearMonth = Clock.System.now()
+        .toLocalDateTime(TimeZone.currentSystemDefault()).date.yearMonth
 
     init {
         loadHistoryForCurrentMonth()
@@ -67,6 +70,20 @@ class HistoryViewModel(private val repository: WorkoutRepository) : BaseViewMode
                     selectedDate = date,
                     selectedDateSets = sets
                 )
+            }
+        }
+    }
+
+    fun previousMonth() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(yearMonth = it.yearMonth.minusMonth()) }
+        }
+    }
+
+    fun nextMonth() {
+        viewModelScope.launch {
+            if (_uiState.value.yearMonth < todayYearMonth) {
+                _uiState.update { it.copy(yearMonth = it.yearMonth.plusMonth()) }
             }
         }
     }
